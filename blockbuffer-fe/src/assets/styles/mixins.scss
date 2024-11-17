@@ -1,0 +1,60 @@
+:root {
+  // css variables for font sizes and stules
+  --text-body-xs: 400 1.0rem "Lato", sans-serif;
+  --text-body-sm: 400 1.2rem "Lato", sans-serif;
+  --text-body-md: 400 1.6rem "Lato", sans-serif;
+  --text-body-lg: 400 2.0rem "Lato", sans-serif;
+  --text-body-xl: 400 2.4rem "Lato", sans-serif;
+
+  --text-ui-xs: 700 1.4rem "Lato", sans-serif;
+  --text-ui-sm: 700 1.6rem "Lato", sans-serif;
+  --text-ui-md: 700 2.0rem "Lato", sans-serif;
+  --text-ui-lg: 700 2.4rem "Lato", sans-serif;
+  --text-ui-xl: 700 3.2rem "Lato", sans-serif;
+
+  // colors
+  --color-primary: #483D58;
+  --color-secondary: #3E334D;
+  --color-tertiary: #493E59;
+  --color-quaternary: #413651;
+  --color-accent: #FFDA0A;
+  --color-on-fill: #FFFFEE;
+
+  --color-background: #0E0A24;
+  --color-background-darkest: #00000055;
+  --color-background-darker: #00000024;
+  --color-background-dark: #00000009;
+  --color-background-light: #ffffff09;
+  --color-background-lighter: #ffffff24;
+  --color-background-lightest: #ffffff55;
+
+  --color-border: #ffffff09;
+  --color-border-dark: #ffffff35;
+
+  // spacing
+  --spacing-xxs: 0.2rem;
+  --spacing-xs: 0.4rem;
+  --spacing-sm: 0.8rem;
+  --spacing-md: 1.2rem;
+  --spacing-lg: 1.6rem;
+  --spacing-xl: 2.4rem;
+  --spacing-xxl: 3.2rem;
+
+  // drop shadow
+  --shadow-sm: 0 0.2rem 0.4rem 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 0.4rem 0.8rem 0 rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 0.8rem 1.6rem 0 rgba(0, 0, 0, 0.1);
+
+  // border radius
+  --border-radius-xs: 0.2rem;
+  --border-radius-sm: 0.4rem;
+  --border-radius-md: 0.8rem;
+  --border-radius-lg: 1.2rem;
+
+  // z-index
+  --header-z-index: 10;
+  --footer-z-index: 10;
+  --dropdown-z-index: 20;
+  --overlay-z-index: 99;
+  --modal-z-index: 100;
+}
