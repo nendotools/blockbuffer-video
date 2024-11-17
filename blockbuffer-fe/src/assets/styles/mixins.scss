@@ -13,20 +13,17 @@
   --text-ui-xl: 700 3.2rem "Lato", sans-serif;
 
   // colors
-  --color-primary: #483D58;
-  --color-secondary: #3E334D;
-  --color-tertiary: #493E59;
-  --color-quaternary: #413651;
-  --color-accent: #FFDA0A;
+  --color-primary: #A048D5;
+  --color-secondary: #4F3C71;
+  --color-tertiary: #1C5565;
+  --color-accent: #EEEA87;
   --color-on-fill: #FFFFEE;
 
-  --color-background: #0E0A24;
-  --color-background-darkest: #00000055;
-  --color-background-darker: #00000024;
-  --color-background-dark: #00000009;
-  --color-background-light: #ffffff09;
-  --color-background-lighter: #ffffff24;
-  --color-background-lightest: #ffffff55;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #ffffff90;
+
+  --color-background-primary: color-mix(in srgb, #0D1A26, var(--color-secondary) 30%);
+  --color-background-secondary: color-mix(in srgb, #0D1A26 90%, var(--color-tertiary) 5%);
 
   --color-border: #ffffff09;
   --color-border-dark: #ffffff35;

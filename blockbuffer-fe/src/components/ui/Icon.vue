@@ -1,13 +1,16 @@
 <template>
-  <i data-feather="name" :class="iconClasses" />
+  <div :class="iconClasses">
+    <i :data-feather="name" />
+  </div>
 </template>
 
 <script lang="ts" setup>
 import { computed } from 'vue';
+import feather from 'feather-icons';
 
 const props = withDefaults(defineProps<{
   name: string;
-  size: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg";
 }>(),
   {
     size: 'md',
@@ -19,27 +22,40 @@ const iconClasses = computed(() => {
     `icon-${props.size}`,
   ];
 });
-</script>
 
-<style>
-@import 'https://unpkg.com/feather-icons';
-</style>
+onMounted(() => {
+  feather.replace();
+});
+</script>
 
 <style lang="scss" scoped>
 .icon {
   display: inline-block;
-  font-size: 1rem;
 
-  &icon-sm {
-    font-size: 0.75rem;
+  svg {
+    width: 1rem;
+    height: 1rem;
   }
 
-  &icon-md {
-    font-size: 1rem;
+  &.icon-sm {
+    svg {
+      width: 1rem;
+      height: 1rem;
+    }
   }
 
-  &icon-lg {
-    font-size: 1.25rem;
+  &.icon-md {
+    svg {
+      width: 3rem;
+      height: 3rem;
+    }
+  }
+
+  &.icon-lg {
+    svg {
+      width: 6rem;
+      height: 6rem;
+    }
   }
 }
 </style>

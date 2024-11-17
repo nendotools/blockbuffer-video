@@ -25,9 +25,15 @@ html {
 }
 
 body {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
   font: var(--text-body-md);
-  background-color: var(--color-background);
-  color: var(--color-primary);
+  background-color: var(--color-background-primary);
+  color: var(--color-text-primary);
 }
 
 h1 {
