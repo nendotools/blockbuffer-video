@@ -15,7 +15,7 @@ import (
 
 type File struct {
 	ID       string `json:"id"`
-	FilePath string `json:"file-path"`
+	FilePath string `json:"filePath"`
 	Status   string `json:"status"`
 	Progress string `json:"progress"`
 }

@@ -36,5 +36,9 @@ func filesHandler(w http.ResponseWriter, r *http.Request) {
 	// respond with json formatted list from fileList
 	w.Header().Set("Content-Type", "application/json")
 	jsonData := json.NewEncoder(w)
-	jsonData.Encode(fileList)
+	fileArray := []File{}
+	for _, file := range fileList {
+		fileArray = append(fileArray, file)
+	}
+	jsonData.Encode(fileArray)
 }
