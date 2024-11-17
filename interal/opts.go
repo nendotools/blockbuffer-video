@@ -5,7 +5,7 @@ import "time"
 // fileQueue is a channel to queue files to be processed
 // This is used to avoid processing the same file multiple times
 // and prevent trigger multiple conversions at once
-var fileQueue = make(chan string, 100)
+var fileQueue = make(chan File, 100)
 var skipList = make(map[string]bool)
 
 const WatchDir = "/mnt/internal-ssd/auto-convert/input"

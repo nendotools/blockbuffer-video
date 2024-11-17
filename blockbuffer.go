@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 	"os"
 
 	// import internal package
@@ -21,7 +19,6 @@ func main() {
 	}
 
 	// Scan input directory and queue files for conversion
-	// call function from interal/scan.go
 	go i.ScanAndQueueFiles(i.WatchDir, i.OutputDir)
 
 	// Start watching the directory
@@ -30,18 +27,6 @@ func main() {
 	// Check the queue and process files
 	go i.ProcessQueue()
 
-	fs := http.FileServer(http.Dir("public"))
-	http.HandleFunc("/api", apiHandler)
-	http.Handle("/", fs)
-
-	fmt.Println("Server listening on port 3000")
-	log.Panic(
-		http.ListenAndServe(":3000", nil),
-	)
-}
-
-func apiHandler(w http.ResponseWriter, r *http.Request) {
-	// respond to the request with json formatted data
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte(`{"message": "hello world"}`))
+	// Start the server
+	i.StartServer()
 }

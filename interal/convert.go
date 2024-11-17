@@ -48,13 +48,13 @@ func waitForFileReady(filePath string) bool {
 
 func ProcessQueue() {
 	for {
-		for filePath := range fileQueue {
+		for file := range fileQueue {
 			// if fileis in skip list, skip it
-			if !skipList[filePath] {
-				go convertToDNxHR(filePath, OutputDir)
+			if !skipList[file.ID] {
+				go convertToDNxHR(file, OutputDir)
 			} else {
-				fmt.Printf("Skipping file: %s\n", filePath)
-				delete(skipList, filePath) // skipped files are removed from the skip list
+				fmt.Printf("Skipping file: %s\n", file.FilePath)
+				delete(skipList, file.FilePath) // skipped files are removed from the skip list
 			}
 		}
 
@@ -76,9 +76,9 @@ type probeData struct {
 var inputProbeData = probeData{}
 
 // convertToDNxHR runs FFmpeg to convert the video to DNxHR
-func convertToDNxHR(inputFile, outputDir string) {
+func convertToDNxHR(inputFile File, outputDir string) {
 	conv <- 1
-	if !waitForFileReady(inputFile) {
+	if !waitForFileReady(inputFile.FilePath) {
 		fmt.Printf("File %s is not ready to be processed\n", inputFile)
 		fileQueue <- inputFile
 		<-conv
@@ -86,12 +86,13 @@ func convertToDNxHR(inputFile, outputDir string) {
 	}
 
 	// Prepare paths
-	outputFile := strings.TrimSuffix(filepath.Base(inputFile), filepath.Ext(inputFile)) + "_dnxhr.mov"
+	//
+	outputFile := strings.TrimSuffix(filepath.Base(inputFile.FilePath), filepath.Ext(inputFile.FilePath)) + "_dnxhr.mov"
 	outputPath := filepath.Join(outputDir, outputFile)
 
 	// probe input file
 	if len(inputProbeData.Streams) == 0 {
-		a, err := ffmpeg.Probe(inputFile)
+		a, err := ffmpeg.Probe(inputFile.FilePath)
 		CheckError(err)
 		err = json.Unmarshal([]byte(a), &inputProbeData)
 		CheckError(err)
@@ -125,7 +126,7 @@ func convertToDNxHR(inputFile, outputDir string) {
 		ffmpegArgs["vf"] = "scale=1080:-2"
 	}
 
-	convertWithProgress(inputFile, outputPath, ffmpegArgs)
+	convertWithProgress(inputFile.FilePath, outputPath, ffmpegArgs)
 	fmt.Printf("Successfully converted: %s -> %s\n", inputFile, outputPath)
 	<-conv
 }

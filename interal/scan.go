@@ -10,7 +10,17 @@ import (
 	"strings"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/u2takey/go-utils/uuid"
 )
+
+type File struct {
+	ID       string `json:"id"`
+	FilePath string `json:"file-path"`
+	Status   string `json:"status"`
+	Progress string `json:"progress"`
+}
+
+var fileList = make(map[string]File)
 
 // isVideoFile checks if a file is a supported video format (case-insensitive)
 func isVideoFile(filePath string) bool {
@@ -30,12 +40,23 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 			inputFile := file.Name()
 			outputFile := strings.TrimSuffix(inputFile, filepath.Ext(inputFile)) + "_dnxhr.mov"
 			outputPath := filepath.Join(outputDir, outputFile)
+			file := File{
+				ID:       uuid.NewUUID(),
+				FilePath: inputDir + "/" + inputFile,
+				Status:   "queued",
+				Progress: "0",
+			}
+			fileList[file.ID] = file
+			fmt.Println("file: ", file)
 
 			if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 				fmt.Printf("Queueing file for conversion: %s\n", inputFile)
-				fileQueue <- inputDir + "/" + inputFile
+				fileQueue <- file
 			} else {
 				fmt.Printf("Output file already exists: %s\n", outputFile)
+				file.Status = "done"
+				file.Progress = "100"
+				fileList[file.ID] = file
 			}
 		}
 	}
@@ -64,16 +85,29 @@ func WatchDirectory(inputDir, outputDir string) {
 				// When a new file is created, process it if it's a video file
 				if isVideoFile(event.Name) {
 					fmt.Printf("Detected new video: %s\n", event.Name)
-					fileQueue <- event.Name
+					file := File{
+						ID:       uuid.NewUUID(),
+						FilePath: event.Name,
+						Status:   "queued",
+						Progress: "0",
+					}
+					fileQueue <- file
+					fileList[file.ID] = file
 
 					// remove file from skip list
-					delete(skipList, event.Name)
+					delete(skipList, file.ID)
 				}
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove {
 				fmt.Printf("Detected removed video: %s\n", event.Name)
 				// add file to skip list
-				skipList[event.Name] = true
+				// search for the file path in the fileList.FilePath
+				for _, file := range fileList {
+					if file.FilePath == event.Name {
+						skipList[file.ID] = true
+						break
+					}
+				}
 			}
 		case err := <-watcher.Errors:
 			fmt.Println("Error:", err)
