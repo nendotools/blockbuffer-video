@@ -2,7 +2,8 @@
   <div class="item">
     <Icon :name="icon" class="icon" />
     <div class="data">
-      <h3>{{ name }}</h3>
+      <h4>{{ name }}</h4>
+      <div class="details">12 files: 1:43:10 total runtime</div>
     </div>
   </div>
 </template>
@@ -22,18 +23,27 @@ const icon = props.fileType === 'video' ? 'film' : 'folder';
 .item {
   display: flex;
   flex-direction: row;
-  background: linear-gradient(180deg, var(--color-background-secondary), var(--color-background-primary));
+  background: linear-gradient(180deg, var(--color-background-secondary), var(--color-background-primary-dark));
 
   .icon {
     align-self: center;
     justify-self: center;
     padding: var(--spacing-xl);
+    background-color: var(--color-background-secondary-dark);
   }
 }
 
 .data {
+  font: var(--text-body-sm);
+
+  width: 100%;
   display: flex;
   flex-direction: column;
-  width: 100%;
+  padding: var(--spacing-md);
+
+  .details {
+    font: var(--text-body-xs);
+    color: var(--color-text-caption);
+  }
 }
 </style>

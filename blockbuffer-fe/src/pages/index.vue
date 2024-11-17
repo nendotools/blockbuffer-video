@@ -28,6 +28,7 @@ const { isMobile } = storeToRefs(globalStore);
 }
 
 .menu {
+  min-width: 200px;
   display: flex;
   flex-direction: column;
   padding: var(--spacing-md) var(--spacing-lg);
@@ -36,7 +37,9 @@ const { isMobile } = storeToRefs(globalStore);
 
 .file-list {
   width: 100%;
+  overflow-y: auto;
   padding: var(--spacing-md) var(--spacing-lg);
+  padding-right: 0;
   background-color: var(--color-background-secondary);
 }
 </style>

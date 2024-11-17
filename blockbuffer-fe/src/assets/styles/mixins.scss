@@ -1,11 +1,13 @@
 :root {
   // css variables for font sizes and stules
+  --text-body-xxs: 400 0.6rem "Lato", sans-serif;
   --text-body-xs: 400 1.0rem "Lato", sans-serif;
   --text-body-sm: 400 1.2rem "Lato", sans-serif;
   --text-body-md: 400 1.6rem "Lato", sans-serif;
   --text-body-lg: 400 2.0rem "Lato", sans-serif;
   --text-body-xl: 400 2.4rem "Lato", sans-serif;
 
+  --text-ui-xxs: 700 1.0rem "Lato", sans-serif;
   --text-ui-xs: 700 1.4rem "Lato", sans-serif;
   --text-ui-sm: 700 1.6rem "Lato", sans-serif;
   --text-ui-md: 700 2.0rem "Lato", sans-serif;
@@ -20,10 +22,14 @@
   --color-on-fill: #FFFFEE;
 
   --color-text-primary: #ffffff;
-  --color-text-secondary: #ffffff90;
+  --color-text-description: #ffffff90;
+  --color-text-caption: #ffffff60;
+  --color-text-placeholder: #ffffff30;
 
   --color-background-primary: color-mix(in srgb, #0D1A26, var(--color-secondary) 30%);
+  --color-background-primary-dark: color-mix(in srgb, #0D1A26 95%, var(--color-secondary) 15%);
   --color-background-secondary: color-mix(in srgb, #0D1A26 90%, var(--color-tertiary) 5%);
+  --color-background-secondary-dark: color-mix(in srgb, #0D1A26 95%, var(--color-tertiary) 2%);
 
   --color-border: #ffffff09;
   --color-border-dark: #ffffff35;
