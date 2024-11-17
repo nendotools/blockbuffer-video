@@ -15,9 +15,15 @@ import Icon from '@/components/ui/Icon.vue';
 import ListFile from '@/components/elements/ListFile.vue';
 import { storeToRefs } from 'pinia';
 import { useGlobalStore } from '@/pinia/global';
+import { useFilesStore } from '@/pinia/files';
 
 const globalStore = useGlobalStore();
 const { isMobile } = storeToRefs(globalStore);
+const fileStore = useFilesStore();
+
+onMounted(() => {
+  fileStore.fetchFiles();
+});
 </script>
 
 <style scoped lang="scss">

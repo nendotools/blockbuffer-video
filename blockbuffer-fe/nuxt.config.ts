@@ -9,6 +9,13 @@ export default defineNuxtConfig({
 
   modules: ["@pinia/nuxt"],
 
+  runtimeConfig: {
+    GO_API: process.env.GO_API_URL,
+    public: {
+      GO_API: process.env.GO_API_URL,
+    },
+  },
+
   css: ["~/assets/styles/mixins.scss"],
   app: {
     head: {
