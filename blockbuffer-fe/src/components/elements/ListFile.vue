@@ -3,20 +3,24 @@
     <Icon :name="icon" class="icon" />
     <div class="data">
       <h4>{{ name }}</h4>
-      <div class="details">12 files: 1:43:10 total runtime</div>
+      <div class="details">1 file: 1:43:10 total runtime</div>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { computed } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
+import File from '@/types/files';
 
 const props = defineProps<{
+  file: File;
   fileType: 'video' | 'folder';
-  name: string;
 }>();
 
 const icon = props.fileType === 'video' ? 'film' : 'folder';
+
+const name = computed(() => props.file.filePath.split('/').pop());
 </script>
 
 <style scoped lang="scss">

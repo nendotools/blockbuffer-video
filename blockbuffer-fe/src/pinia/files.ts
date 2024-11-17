@@ -1,5 +1,7 @@
+import type { File } from "~/types/files";
+
 interface State {
-  files: any[];
+  files: File[];
 }
 export const useFilesStore = defineStore("files", {
   state: (): State => ({
@@ -8,7 +10,7 @@ export const useFilesStore = defineStore("files", {
   actions: {
     async fetchFiles() {
       console.log("fetchFiles");
-      const data = await useFetch<any[]>("/files");
+      const data = await useFetch<File[]>("/files");
       this.files = data;
     },
   },

@@ -4,8 +4,7 @@
       menu
     </div>
     <div class="file-list">
-      <ListFile fileType="video" name="video1" />
-      <ListFile fileType="folder" name="folder1" />
+      <ListFile v-for="file in files" :key="file.id" fileType="video" :file="file" />
     </div>
   </div>
 </template>
@@ -17,12 +16,13 @@ import { storeToRefs } from 'pinia';
 import { useGlobalStore } from '@/pinia/global';
 import { useFilesStore } from '@/pinia/files';
 
+const fileStore = useFilesStore();
 const globalStore = useGlobalStore();
 const { isMobile } = storeToRefs(globalStore);
-const fileStore = useFilesStore();
+const { files } = storeToRefs(fileStore);
 
-onMounted(() => {
-  fileStore.fetchFiles();
+onMounted(async () => {
+  await fileStore.fetchFiles();
 });
 </script>
 
