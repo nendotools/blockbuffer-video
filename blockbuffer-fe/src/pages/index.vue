@@ -10,6 +10,7 @@
 </template>
 
 <script lang="ts" setup>
+import { onMounted } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
 import ListFile from '@/components/elements/ListFile.vue';
 import { storeToRefs } from 'pinia';

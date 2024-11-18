@@ -9,6 +9,9 @@ export default defineNuxtConfig({
 
   modules: ["@pinia/nuxt"],
 
+  imports: {
+    autoImport: false,
+  },
   runtimeConfig: {
     GO_API: process.env.GO_API_URL,
     public: {

@@ -1,4 +1,6 @@
+import { defineStore } from "pinia";
 import type { File } from "~/types/files";
+import { useFetch } from "@/composables/useFetch";
 
 interface State {
   files: File[];

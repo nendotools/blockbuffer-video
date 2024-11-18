@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import feather from 'feather-icons';
 
 const props = withDefaults(defineProps<{

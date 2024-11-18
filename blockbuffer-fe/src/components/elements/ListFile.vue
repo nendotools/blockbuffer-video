@@ -28,6 +28,7 @@ const name = computed(() => props.file.filePath.split('/').pop());
   display: flex;
   flex-direction: row;
   background: linear-gradient(180deg, var(--color-background-secondary), var(--color-background-primary-dark));
+  border-bottom: 1px solid var(--color-border-field);
 
   .icon {
     align-self: center;
