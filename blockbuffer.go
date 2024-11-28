@@ -19,10 +19,10 @@ func main() {
 	}
 
 	// Scan input directory and queue files for conversion
-	go i.ScanAndQueueFiles(i.WatchDir, i.OutputDir)
+	go i.ScanAndQueueFiles(*i.WatchDir, i.OutputDir)
 
 	// Start watching the directory
-	go i.WatchDirectory(i.WatchDir, i.OutputDir)
+	go i.WatchDirectory(*i.WatchDir, i.OutputDir)
 
 	// Check the queue and process files
 	go i.ProcessQueue()

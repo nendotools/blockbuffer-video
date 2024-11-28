@@ -7,6 +7,7 @@ package internal
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -28,11 +29,28 @@ func isDevServer() bool {
 	return strings.HasPrefix(execPath, tempDir)
 }
 
+type filterWriter struct {
+	writer io.Writer
+}
+
+func (fw *filterWriter) Write(p []byte) (n int, err error) {
+	// get string from byte slice
+	// filter out nuxt.js logs
+	// write to writer
+	s := string(p)
+	if !strings.Contains(s, "WARN  Deprecation") {
+		return fw.writer.Write(p)
+	}
+	return len(p), nil
+}
+
 func startNuxtDev() {
 	cmd := exec.Command("yarn", "dev")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	cmd.Dir = "./blockbuffer-fe"
+
+	// listen to stdout and stderr and pass to stdout with prefix "NUXT: "
+	cmd.Stdout = &filterWriter{writer: log.Writer()}
+	cmd.Stderr = &filterWriter{writer: log.Writer()}
 
 	log.Println("Starting Nuxt.js development server...")
 	if err := cmd.Start(); err != nil {
@@ -68,9 +86,9 @@ func StartServer() {
 	}
 
 	http.Handle("/api/", http.StripPrefix("/api", http.HandlerFunc(apiHandler)))
-	fmt.Println("Server listening on port 8080")
+	fmt.Printf("Server listening on port %s\n", *Port)
 	log.Panic(
-		http.ListenAndServe(":8080", nil),
+		http.ListenAndServe(":"+*Port, nil),
 	)
 }
 
