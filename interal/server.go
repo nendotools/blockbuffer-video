@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -88,7 +89,7 @@ func StartServer() {
 	http.Handle("/api/", http.StripPrefix("/api", http.HandlerFunc(apiHandler)))
 	fmt.Printf("Server listening on port %s\n", *Port)
 	log.Panic(
-		http.ListenAndServe(":"+*Port, nil),
+		http.ListenAndServe(":"+strconv.Itoa(*Port), nil),
 	)
 }
 
