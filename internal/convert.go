@@ -51,7 +51,7 @@ func ProcessQueue() {
 		for file := range fileQueue {
 			// if fileis in skip list, skip it
 			if !skipList[file.ID] {
-				go convertToDNxHR(file, OutputDir)
+				go convertToDNxHR(file, *OutputDir)
 			} else {
 				fmt.Printf("Skipping file: %s\n", file.FilePath)
 				delete(skipList, file.FilePath) // skipped files are removed from the skip list
