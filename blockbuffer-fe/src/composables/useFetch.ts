@@ -1,6 +1,7 @@
 export const useFetch = async <T>(url: string, fetchOptions?: any) => {
   const response = await fetch(
     `/api${url}`,
+    fetchOptions
   );
 
   if (!response.ok) {

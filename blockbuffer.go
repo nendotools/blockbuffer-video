@@ -18,6 +18,21 @@ func main() {
 		}
 	}
 
+	// Ensure upload directory exists
+	if _, err := os.Stat(*i.WatchDir); os.IsNotExist(err) {
+		err := os.MkdirAll(*i.WatchDir, 0755)
+		if err != nil {
+			log.Fatalf("Failed to create upload directory: %v", err)
+		}
+	}
+
+	if _, err := os.Stat(*i.UploadDir); os.IsNotExist(err) {
+		err := os.MkdirAll(*i.UploadDir, 0755)
+		if err != nil {
+			log.Fatalf("Failed to create upload directory: %v", err)
+		}
+	}
+
 	// Scan input directory and queue files for conversion
 	go i.ScanAndQueueFiles(*i.WatchDir, *i.OutputDir)
 

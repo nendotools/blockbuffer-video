@@ -6,6 +6,10 @@
     <div class="file-list">
       <ListFile v-for="file in files" :key="file.id" fileType="video" :file="file" />
     </div>
+
+    <div @click="selectFiles">
+      upload file
+    </div>
   </div>
 </template>
 
@@ -25,6 +29,22 @@ const { files } = storeToRefs(fileStore);
 onMounted(async () => {
   await fileStore.fetchFiles();
 });
+
+const selectFiles = (event: Event) => {
+  if (!event.target) return;
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = 'video/*';
+
+  input.onchange = () => {
+    const files = [...(input.files || [])];
+    if (files) {
+      fileStore.uploadFiles(files);
+    }
+  };
+  input.click();
+};
 </script>
 
 <style scoped lang="scss">

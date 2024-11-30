@@ -18,6 +18,14 @@ import (
 	"strings"
 )
 
+func ErrorJSON(w http.ResponseWriter, message string, code int) {
+	// respond with json formatted error message
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	jsonData := json.NewEncoder(w)
+	jsonData.Encode(map[string]interface{}{"error": message, "code": code})
+}
+
 func isDevServer() bool {
 	// Get the executable path
 	execPath, err := os.Executable()
@@ -100,6 +108,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	// handle routing requests with router
 	router := http.NewServeMux()
 	router.HandleFunc("/files", filesHandler)
+	router.HandleFunc("/upload", HandleUploadMultipleFiles)
 	router.ServeHTTP(w, r)
 }
 
