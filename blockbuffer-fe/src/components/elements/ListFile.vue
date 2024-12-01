@@ -14,7 +14,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from '#imports';
+import { watch, computed, onMounted, ref } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
 import { type File } from '@/types/files';
 
@@ -29,6 +29,13 @@ const completed = ref(false);
 const name = computed(() => props.file.filePath.split('/').pop());
 onMounted(() => {
   if (props.file.progress === 100) {
+    completed.value = true;
+  }
+});
+
+watch(() => props.file.progress, async (progress) => {
+  if (progress === 100) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
     completed.value = true;
   }
 });

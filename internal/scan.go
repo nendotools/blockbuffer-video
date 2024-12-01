@@ -17,7 +17,7 @@ type File struct {
 	ID       string `json:"id"`
 	FilePath string `json:"filePath"`
 	Status   string `json:"status"`
-	Progress string `json:"progress"`
+	Progress int    `json:"progress"`
 }
 
 var fileList = make(map[string]File)
@@ -44,7 +44,7 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 				ID:       uuid.NewUUID(),
 				FilePath: inputDir + "/" + inputFile,
 				Status:   "queued",
-				Progress: "0",
+				Progress: 0,
 			}
 			fileList[file.ID] = file
 			fmt.Println("file: ", file)
@@ -55,7 +55,7 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 			} else {
 				fmt.Printf("Output file already exists: %s\n", outputFile)
 				file.Status = "done"
-				file.Progress = "100"
+				file.Progress = 100
 				fileList[file.ID] = file
 			}
 		}
@@ -89,7 +89,7 @@ func WatchDirectory(inputDir, outputDir string) {
 						ID:       uuid.NewUUID(),
 						FilePath: event.Name,
 						Status:   "queued",
-						Progress: "0",
+						Progress: 0,
 					}
 					fileQueue <- file
 					fileList[file.ID] = file

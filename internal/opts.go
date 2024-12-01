@@ -47,7 +47,7 @@ func init() {
 	WatchDir = opts.String("w", "/mnt/internal-ssd/auto-convert/input", opts.Description("Directory to watch for new files"), opts.Alias("watch-dir"))
 	OutputDir = opts.String("o", "/mnt/internal-ssd/auto-convert/output", opts.Description("Directory to output converted files"), opts.Alias("output-dir"))
 	UploadDir = opts.String("u", "/mnt/internal-ssd/auto-convert/upload", opts.Description("Directory to store files being uploaded by the user"), opts.Alias("upload-dir"))
-	maxConcurrent = opts.Int("c", 8, opts.Description("Max number of concurrent conversions"), opts.Alias("concurrency"))
+	maxConcurrent = opts.Int("c", 1, opts.Description("Max number of concurrent conversions"), opts.Alias("concurrency"))
 	maxQueueSize = opts.Int("q", 100, opts.Description("Max number of files to queue"), opts.Alias("queue-size"))
 
 	opts.Parse(os.Args[1:])

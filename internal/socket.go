@@ -24,12 +24,8 @@ func HandleSocketConnections(w http.ResponseWriter, r *http.Request) {
 		ErrorJSON(w, fmt.Sprintf("Failed to upgrade connection: %v", err), http.StatusInternalServerError)
 		return
 	}
-	err = ws.WriteJSON(fileList)
-	if err != nil {
-		log.Println("Failed to write to client")
-		ws.Close()
-		return
-	}
+
+	BroadcastFiles(fileList)
 
 	log.Println("Connected to server")
 	defer ws.Close()

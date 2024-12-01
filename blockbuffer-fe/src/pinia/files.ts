@@ -26,15 +26,19 @@ export const useFilesStore = defineStore("files", {
       console.log(data);
     },
 
-    async updateFiles(files: Record<string, MediaFile>) {
+    async updateFiles(files: MediaFile[]) {
       if (!files) {
         return;
       }
 
-      this.files = Object.values(files).map((f) => ({
-        ...f,
-        progress: Number(f.progress)
-      }));
+      Object.values(files).forEach((file) => {
+        const fileIndex = this.files.findIndex((f) => f.id === file.id);
+        if (fileIndex === -1) {
+          this.files.push(file);
+        } else {
+          this.files[fileIndex] = file;
+        }
+      });
     }
   },
 });

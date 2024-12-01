@@ -15,12 +15,20 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 var Cmd *exec.Cmd
+
+func Ternary(condition bool, a, b string) string {
+	if condition {
+		return a
+	}
+	return b
+}
 
 func waitForFileReady(filePath string) bool {
 	const checkInterval = 5 * time.Second
@@ -79,7 +87,7 @@ var inputProbeData = probeData{}
 func convertToDNxHR(inputFile File, outputDir string) {
 	conv <- 1
 	if !waitForFileReady(inputFile.FilePath) {
-		fmt.Printf("File %s is not ready to be processed\n", inputFile)
+		fmt.Printf("File %s is not ready to be processed\n", inputFile.ID)
 		fileQueue <- inputFile
 		<-conv
 		return
@@ -126,13 +134,13 @@ func convertToDNxHR(inputFile File, outputDir string) {
 		ffmpegArgs["vf"] = "scale=1080:-2"
 	}
 
-	convertWithProgress(inputFile.FilePath, outputPath, ffmpegArgs)
-	fmt.Printf("Successfully converted: %s -> %s\n", inputFile, outputPath)
+	convertWithProgress(inputFile.ID, inputFile.FilePath, outputPath, ffmpegArgs)
+	fmt.Printf("Successfully converted: %s -> %s\n", inputFile.FilePath, outputPath)
 	<-conv
 }
 
 // convertWithProgress uses the ffmpeg `-progress` option with a unix-domain socket to report progress
-func convertWithProgress(inFileName string, outFileName string, ffmpegArgs ffmpeg.KwArgs) {
+func convertWithProgress(fileId string, inFileName string, outFileName string, ffmpegArgs ffmpeg.KwArgs) {
 	var err error
 
 	// get duration of video (3 seconds if preview mode)
@@ -142,7 +150,7 @@ func convertWithProgress(inFileName string, outFileName string, ffmpegArgs ffmpe
 	fmt.Printf("Processing file: %s\n", inFileName)
 	Cmd = ffmpeg.Input(inFileName).
 		Output(outFileName, ffmpegArgs).
-		GlobalArgs("-progress", "unix://"+TempSock(totalDuration)).
+		GlobalArgs("-progress", "unix://"+TempSock(totalDuration, fileId)).
 		OverWriteOutput().
 		Silent(true).
 		Compile()
@@ -152,6 +160,7 @@ func convertWithProgress(inFileName string, outFileName string, ffmpegArgs ffmpe
 		fmt.Printf("Error converting file: %v\n", err)
 	}
 
+	updateProgress(fileId, 100)
 	fmt.Printf("Successfully queued file: %s -> %s\n", inFileName, outFileName)
 }
 
@@ -163,11 +172,12 @@ func probeDuration(data probeData) (float64, error) {
 	return f, nil
 }
 
-func TempSock(totalDuration float64) string {
+func TempSock(totalDuration float64, fileId string) string {
 	// serve
 	sockFileName := path.Join(os.TempDir(), fmt.Sprintf("%d_sock", rand.Int()))
 	l, err := net.Listen("unix", sockFileName)
 	if err != nil {
+		updateProgress(fileId, -1)
 		panic(err)
 	}
 
@@ -194,9 +204,12 @@ func TempSock(totalDuration float64) string {
 			}
 			if strings.Contains(data, "progress=end") {
 				cp = 1.00
+				updateProgress(fileId, 100)
+				break
 			}
 			if cp > 0.00 && cp <= 1.00 {
 				fmt.Printf("\033[2K\rProgress: %.2f%%", cp*100)
+				updateProgress(fileId, int(cp*100))
 				if cp == 1.00 {
 					l.Close()
 					break
@@ -206,4 +219,19 @@ func TempSock(totalDuration float64) string {
 	}()
 
 	return sockFileName
+}
+
+var mutex = &sync.Mutex{}
+
+func updateProgress(fileId string, progress int) {
+	mutex.Lock()
+	fileList[fileId] = File{
+		ID:       fileId,
+		FilePath: fileList[fileId].FilePath,
+		Status:   Ternary(progress == 100, "Completed", Ternary(progress == -1, "Failure", "Processing")),
+		Progress: progress,
+	}
+	mutex.Unlock()
+
+	BroadcastFiles(map[string]File{fileId: fileList[fileId]})
 }
