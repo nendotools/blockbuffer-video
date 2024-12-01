@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/u2takey/go-utils/uuid"
@@ -20,6 +21,7 @@ type File struct {
 	Progress int    `json:"progress"`
 }
 
+var fileListMutex = &sync.Mutex{}
 var fileList = make(map[string]File)
 
 // isVideoFile checks if a file is a supported video format (case-insensitive)
@@ -46,8 +48,10 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 				Status:   "queued",
 				Progress: 0,
 			}
+			fileListMutex.Lock()
 			fileList[file.ID] = file
 			fmt.Println("file: ", file)
+			fileListMutex.Unlock()
 
 			if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 				fmt.Printf("Queueing file for conversion: %s\n", inputFile)
@@ -56,7 +60,9 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 				fmt.Printf("Output file already exists: %s\n", outputFile)
 				file.Status = "done"
 				file.Progress = 100
+				fileListMutex.Lock()
 				fileList[file.ID] = file
+				fileListMutex.Unlock()
 			}
 		}
 	}
@@ -92,7 +98,9 @@ func WatchDirectory(inputDir, outputDir string) {
 						Progress: 0,
 					}
 					fileQueue <- file
+					fileListMutex.Lock()
 					fileList[file.ID] = file
+					fileListMutex.Unlock()
 					BroadcastFiles(fileList)
 
 					// remove file from skip list

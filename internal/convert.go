@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	ffmpeg "github.com/u2takey/ffmpeg-go"
@@ -221,17 +220,15 @@ func TempSock(totalDuration float64, fileId string) string {
 	return sockFileName
 }
 
-var mutex = &sync.Mutex{}
-
 func updateProgress(fileId string, progress int) {
-	mutex.Lock()
+	fileListMutex.Lock()
 	fileList[fileId] = File{
 		ID:       fileId,
 		FilePath: fileList[fileId].FilePath,
 		Status:   Ternary(progress == 100, "Completed", Ternary(progress == -1, "Failure", "Processing")),
 		Progress: progress,
 	}
-	mutex.Unlock()
+	fileListMutex.Unlock()
 
 	BroadcastFiles(map[string]File{fileId: fileList[fileId]})
 }
