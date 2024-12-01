@@ -94,6 +94,10 @@ func StartServer() {
 		http.Handle("/", fs)
 	}
 
+	// Web Scocket Server
+	go HandleMessages()
+	http.HandleFunc("/ws", HandleSocketConnections)
+
 	http.Handle("/api/", http.StripPrefix("/api", http.HandlerFunc(apiHandler)))
 	fmt.Printf("Server listening on port %s\n", strconv.Itoa(*Port))
 	log.Panic(
@@ -107,8 +111,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	// handle routing requests with router
 	router := http.NewServeMux()
-	router.HandleFunc("/files", filesHandler)
-	router.HandleFunc("/upload", HandleUploadMultipleFiles)
+	router.HandleFunc("GET /files", filesHandler)
+	router.HandleFunc("POST /upload", HandleUploadMultipleFiles)
 	router.ServeHTTP(w, r)
 }
 

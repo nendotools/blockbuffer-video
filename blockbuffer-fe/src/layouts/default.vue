@@ -8,12 +8,14 @@
         </div>
       </template>
       <template #right>
-        <Button size="md" variant="plain" :bottom-highlight="false" class="header-btn">
-          manual-queue
-        </Button>
-        <Button size="md" variant="plain" bottom-highlight class="header-btn">
-          auto-queue
-        </Button>
+        <div class="mode-select">
+          <Button size="md" variant="plain" :bottom-highlight="false" class="header-btn">
+            manual-queue
+          </Button>
+          <Button size="md" variant="plain" bottom-highlight class="header-btn">
+            auto-queue
+          </Button>
+        </div>
       </template>
     </Header>
     <div class="page">
@@ -53,9 +55,16 @@ import Button from '@/components/ui/Button.vue';
   .header-btn {
     padding: var(--spacing-xl) var(--spacing-lg);
   }
+
+  .mode-select {
+    display: flex;
+    flex-direction: row;
+    gap: var(--spacing-md);
+  }
 }
 
 .page {
+  overflow: hidden;
   align-self: stretch;
   position: relative;
   background-color: var(--color-background-secondary) !important;

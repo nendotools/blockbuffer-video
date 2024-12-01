@@ -93,6 +93,7 @@ func WatchDirectory(inputDir, outputDir string) {
 					}
 					fileQueue <- file
 					fileList[file.ID] = file
+					BroadcastFiles(fileList)
 
 					// remove file from skip list
 					delete(skipList, file.ID)

@@ -1,6 +1,8 @@
 <template>
   <button :class="[size, variant, { bottomHighlight }]">
+    <slot name="icon-left" />
     <slot />
+    <slot name="icon-right" />
   </button>
 </template>
 
@@ -8,7 +10,7 @@
 withDefaults(
   defineProps<{
     variant: 'primary' | 'plain';
-    size: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg';
     bottomHighlight?: boolean;
   }>(),
   {
@@ -25,6 +27,11 @@ button {
   padding: 0;
   border: none;
   cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: var(--spacing-md);
   color: var(--color-text-primary);
   background-color: color-mix(in srgb, var(--color-background-primary), var(--color-primary));
   border-radius: var(--border-radius-md);

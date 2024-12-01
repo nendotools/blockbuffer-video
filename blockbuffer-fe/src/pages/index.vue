@@ -7,15 +7,19 @@
       <ListFile v-for="file in files" :key="file.id" fileType="video" :file="file" />
     </div>
 
-    <div @click="selectFiles">
+    <Button variant="primary" class="floating-upload" @click="selectFiles">
+      <template #icon-left>
+        <Icon name="upload" size="md" />
+      </template>
       upload file
-    </div>
+    </Button>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { onMounted } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
+import Button from '@/components/ui/Button.vue';
 import ListFile from '@/components/elements/ListFile.vue';
 import { storeToRefs } from 'pinia';
 import { useGlobalStore } from '@/pinia/global';
@@ -27,7 +31,7 @@ const { isMobile } = storeToRefs(globalStore);
 const { files } = storeToRefs(fileStore);
 
 onMounted(async () => {
-  await fileStore.fetchFiles();
+  await fileStore.initSocket();
 });
 
 const selectFiles = (event: Event) => {
@@ -68,5 +72,12 @@ const selectFiles = (event: Event) => {
   padding: var(--spacing-md) var(--spacing-lg);
   padding-right: 0;
   background-color: var(--color-background-secondary);
+}
+
+.floating-upload {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-xl);
+  z-index: 100;
 }
 </style>

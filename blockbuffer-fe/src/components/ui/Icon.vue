@@ -46,15 +46,15 @@ onMounted(() => {
 
   &.icon-md {
     svg {
-      width: 3rem;
-      height: 3rem;
+      width: 2rem;
+      height: 2rem;
     }
   }
 
   &.icon-lg {
     svg {
-      width: 6rem;
-      height: 6rem;
+      width: 3rem;
+      height: 3rem;
     }
   }
 }
