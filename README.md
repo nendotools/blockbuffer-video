@@ -32,7 +32,7 @@ This is an evolving project and the list of features will be updated as developm
 
 | Option | Short | Type | Description | Default |
 |---|---|---|---|---|
-| --listen | -l | string | The IP address the server will listen on | 127.0.0.1 |
+| --listen | -l | string | The IP address the server will listen on, flag-only = 0.0.0.0 | 127.0.0.1 |
 | --port | -p | int | The port the server will listen on | 8080 |
 | --watch-dir | -w | string | The directory to be watched for new files | ./media/input |
 | --output | -o | string | The directory where converted videos will be saved | ./media/output |

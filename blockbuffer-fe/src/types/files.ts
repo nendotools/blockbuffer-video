@@ -4,3 +4,8 @@ export interface File {
   status: string;
   progress: number;
 }
+
+export interface FileMessage {
+  type: 'update_file' | 'refresh_files';
+  data: File[];
+}

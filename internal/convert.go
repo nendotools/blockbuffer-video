@@ -158,6 +158,7 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 	if err != nil {
 		fmt.Printf("Error converting file: %v\n", err)
 	}
+	defer Cmd.Process.Kill()
 
 	updateProgress(fileId, 100)
 	fmt.Printf("Successfully queued file: %s -> %s\n", inFileName, outFileName)

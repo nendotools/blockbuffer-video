@@ -101,7 +101,7 @@ func WatchDirectory(inputDir string, outputDir string) {
 					FileListMutex.Lock()
 					fileList[file.ID] = file
 					FileListMutex.Unlock()
-					BroadcastFiles(fileList)
+					BroadcastFiles(map[string]File{file.ID: file})
 
 					// remove file from skip list
 					delete(skipList, file.ID)

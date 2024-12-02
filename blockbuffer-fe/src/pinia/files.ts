@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { File as MediaFile } from "~/types/files";
+import type { FileMessage, File as MediaFile } from "~/types/files";
 import { getFiles, uploadFiles } from "~/apiClient/files";
 import { useWebSocket } from "~/composables/useWebSocket";
 
@@ -26,12 +26,12 @@ export const useFilesStore = defineStore("files", {
       console.log(data);
     },
 
-    async updateFiles(files: MediaFile[]) {
-      if (!files) {
+    async updateFiles(message: FileMessage) {
+      if (!message) {
         return;
       }
 
-      Object.values(files).forEach((file) => {
+      Object.values(message.data).forEach((file) => {
         const fileIndex = this.files.findIndex((f) => f.id === file.id);
         if (fileIndex === -1) {
           this.files.push(file);

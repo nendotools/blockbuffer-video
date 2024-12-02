@@ -61,6 +61,10 @@ func init() {
 		os.Exit(0)
 	}
 
+	if opts.Called("listen") == true && *ListenAddr == "127.0.0.1" {
+		*ListenAddr = "0.0.0.0"
+	}
+
 	fmt.Println("Will listen on", *ListenAddr)
 	fmt.Println("watching", *WatchDir)
 	fmt.Println("outputting to", *OutputDir)
