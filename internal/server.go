@@ -86,6 +86,10 @@ func proxyToNuxtDev(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartServer() {
+	if *Headless {
+		return
+	}
+
 	if isDevServer() {
 		startNuxtDev()
 		http.HandleFunc("/", proxyToNuxtDev)
@@ -101,7 +105,7 @@ func StartServer() {
 	http.Handle("/api/", http.StripPrefix("/api", http.HandlerFunc(apiHandler)))
 	fmt.Printf("Server listening on port %s\n", strconv.Itoa(*Port))
 	log.Panic(
-		http.ListenAndServe(":"+strconv.Itoa(*Port), nil),
+		http.ListenAndServe(*ListenAddr+":"+strconv.Itoa(*Port), nil),
 	)
 }
 

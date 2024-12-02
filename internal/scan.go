@@ -69,7 +69,7 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 }
 
 // WatchDirectory watches the directory for new video files and triggers conversion to DNxHR
-func WatchDirectory(inputDir, outputDir string) {
+func WatchDirectory(inputDir string, outputDir string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)

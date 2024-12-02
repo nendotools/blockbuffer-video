@@ -28,6 +28,20 @@ The core functionality of the application is to convert videos to a variety of f
 
 This is an evolving project and the list of features will be updated as development progresses.
 
+## Server Options
+
+| Option | Short | Type | Description | Default |
+|---|---|---|---|---|
+| --listen | -l | string | The IP address the server will listen on | 127.0.0.1 |
+| --port | -p | int | The port the server will listen on | 8080 |
+| --watch-dir | -w | string | The directory to be watched for new files | ./media/input |
+| --output | -o | string | The directory where converted videos will be saved | ./media/output |
+| --upload | -u | string | The directory where videos are uploaded from the UI | ./media/upload |
+| --concurrency | -c | int | The number of concurrent conversions allowed | 1 |
+| --queue-size | -q | int | The number of videos that can be queued for conversion | 100 |
+| --headless | -H | bool | Run the server without a web interface | false |
+
+
 ## Installation
 
 Clone the repository, cd into project directory, and install dependencies:

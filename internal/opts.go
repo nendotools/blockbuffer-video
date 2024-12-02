@@ -19,6 +19,8 @@ type progressMsg struct {
 }
 
 var Port *int
+var ListenAddr *string
+var Headless *bool
 var WatchDir *string  // WatchDir is the directory to watch for new files
 var OutputDir *string // OutputDir is the directory to output converted files
 var UploadDir *string // UploadDir is the directory to store files being uploaded by the user
@@ -42,13 +44,16 @@ const maxQueueRetry = 3   // failed files will be retried up to 3 times
 
 func init() {
 	opts := getopts.New()
-	opts.HelpCommand("h", opts.Alias("help"))
-	Port = opts.Int("p", 8080, opts.Description("Port to listen on"), opts.Alias("port"))
-	maxConcurrent = opts.Int("c", 1, opts.Description("Max number of concurrent conversions"), opts.Alias("concurrency"))
-	maxQueueSize = opts.Int("q", 100, opts.Description("Max number of files to queue"), opts.Alias("queue-size"))
-	WatchDir = opts.String("w", "./media/input", opts.Description("Directory to watch for new files"), opts.Alias("watch-dir"))
-	OutputDir = opts.String("o", "./media/output", opts.Description("Directory to output converted files"), opts.Alias("output-dir"))
-	UploadDir = opts.String("u", "./media/upload", opts.Description("Directory to store files being uploaded by the user"), opts.Alias("upload-dir"))
+	opts.HelpCommand("help", opts.Alias("h"))
+	Port = opts.Int("port", 8080, opts.Description("Port to listen on"), opts.Alias("p"))
+	ListenAddr = opts.String("listen", "127.0.0.1", opts.Description("Address to listen on"), opts.Alias("l"))
+	Headless = opts.Bool("headless", false, opts.Description("Run in headless mode"), opts.Alias("H"))
+
+	maxConcurrent = opts.Int("concurrency", 1, opts.Description("Max number of concurrent conversions"), opts.Alias("c"))
+	maxQueueSize = opts.Int("queue-size", 100, opts.Description("Max number of files to queue"), opts.Alias("q"))
+	WatchDir = opts.String("watch-dir", "./media/input", opts.Description("Directory to watch for new files"), opts.Alias("w"))
+	OutputDir = opts.String("output-dir", "./media/output", opts.Description("Directory to output converted files"), opts.Alias("o"))
+	UploadDir = opts.String("upload-dir", "./media/upload", opts.Description("Directory to store files being uploaded by the user"), opts.Alias("u"))
 
 	opts.Parse(os.Args[1:])
 	if opts.Called("help") {
@@ -56,10 +61,10 @@ func init() {
 		os.Exit(0)
 	}
 
+	fmt.Println("Will listen on", *ListenAddr)
+	fmt.Println("watching", *WatchDir)
+	fmt.Println("outputting to", *OutputDir)
+	fmt.Println("uploading to", *UploadDir)
 	conv = make(chan int, *maxConcurrent)
 	fileQueue = make(chan File, *maxQueueSize)
-
-	// print the Port and WatchDir
-	fmt.Println("Port: ", *Port)
-	fmt.Println("WatchDir: ", *WatchDir)
 }

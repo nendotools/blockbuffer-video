@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	// Ensure output directory exists
 	if _, err := os.Stat(*i.OutputDir); os.IsNotExist(err) {
 		err := os.MkdirAll(*i.OutputDir, 0755)
