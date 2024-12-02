@@ -22,6 +22,15 @@ import (
 
 var Cmd *exec.Cmd
 
+// map file ID to Conversion command
+type Conversion struct {
+	inFile  string
+	outFile string
+	cmd     *exec.Cmd
+}
+
+var ConversionMap = make(map[string]Conversion)
+
 func Ternary(condition bool, a, b string) string {
 	if condition {
 		return a
@@ -93,7 +102,6 @@ func convertToDNxHR(inputFile File, outputDir string) {
 	}
 
 	// Prepare paths
-	//
 	outputFile := strings.TrimSuffix(filepath.Base(inputFile.FilePath), filepath.Ext(inputFile.FilePath)) + "_dnxhr.mov"
 	outputPath := filepath.Join(outputDir, outputFile)
 
@@ -134,6 +142,7 @@ func convertToDNxHR(inputFile File, outputDir string) {
 	}
 
 	convertWithProgress(inputFile.ID, inputFile.FilePath, outputPath, ffmpegArgs)
+	updateProgress(inputFile.ID, 100)
 	fmt.Printf("Successfully converted: %s -> %s\n", inputFile.FilePath, outputPath)
 	<-conv
 }
@@ -146,6 +155,8 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 	totalDuration, err := probeDuration(inputProbeData)
 	CheckError(err)
 
+	fmt.Println("preparing conversion")
+
 	fmt.Printf("Processing file: %s\n", inFileName)
 	Cmd = ffmpeg.Input(inFileName).
 		Output(outFileName, ffmpegArgs).
@@ -153,14 +164,20 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 		OverWriteOutput().
 		Silent(true).
 		Compile()
+	ConversionMap[fileId] = Conversion{
+		inFile:  inFileName,
+		outFile: outFileName,
+		cmd:     Cmd,
+	}
 
 	err = Cmd.Run()
 	if err != nil {
 		fmt.Printf("Error converting file: %v\n", err)
 	}
-	defer Cmd.Process.Kill()
+	fmt.Println("Conversion running")
 
-	updateProgress(fileId, 100)
+	defer Cmd.Process.Signal(os.Interrupt)
+
 	fmt.Printf("Successfully queued file: %s -> %s\n", inFileName, outFileName)
 }
 
@@ -222,6 +239,9 @@ func TempSock(totalDuration float64, fileId string) string {
 }
 
 func updateProgress(fileId string, progress float32) {
+	if _, ok := fileList[fileId]; !ok {
+		return
+	}
 	FileListMutex.Lock()
 	fileList[fileId] = File{
 		ID:       fileId,
@@ -232,4 +252,19 @@ func updateProgress(fileId string, progress float32) {
 	FileListMutex.Unlock()
 
 	BroadcastFiles(map[string]File{fileId: fileList[fileId]})
+}
+
+func CancelConversion(fileId string) {
+	if conv, ok := ConversionMap[fileId]; ok {
+		fmt.Println("cmd found for: ", fileId)
+		if err := conv.cmd.Process.Signal(os.Interrupt); err == nil {
+			if _, err := os.Stat(conv.outFile); !os.IsNotExist(err) {
+				fmt.Println("Removing incomplete file: ", conv.outFile)
+				if err := os.Remove(conv.outFile); err != nil {
+					fmt.Println("Error deleting file: ", err)
+				}
+			}
+		}
+		delete(ConversionMap, fileId)
+	}
 }

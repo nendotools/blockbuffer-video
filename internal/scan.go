@@ -87,7 +87,8 @@ func WatchDirectory(inputDir string, outputDir string) {
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Op&fsnotify.Create == fsnotify.Create {
+			// Create is triggered when a new file is created AND not Rename
+			if event.Op.Has(fsnotify.Create) {
 				// When a new file is created, process it if it's a video file
 				if isVideoFile(event.Name) {
 					fmt.Printf("Detected new video: %s\n", event.Name)
@@ -101,19 +102,30 @@ func WatchDirectory(inputDir string, outputDir string) {
 					FileListMutex.Lock()
 					fileList[file.ID] = file
 					FileListMutex.Unlock()
-					BroadcastFiles(map[string]File{file.ID: file})
+					BroadcastMessage(Message{
+						MessageType: CreateFile,
+						Data:        map[string]File{file.ID: file},
+					})
 
 					// remove file from skip list
 					delete(skipList, file.ID)
 				}
 			}
-			if event.Op&fsnotify.Remove == fsnotify.Remove {
+			if event.Op.Has(fsnotify.Rename) || event.Op.Has(fsnotify.Remove) {
 				fmt.Printf("Detected removed video: %s\n", event.Name)
 				// add file to skip list
 				// search for the file path in the fileList.FilePath
 				for _, file := range fileList {
+					fmt.Println(file.FilePath == event.Name, " file: ", file)
 					if file.FilePath == event.Name {
+						fmt.Println("canceling conversion: ", file.ID)
+						CancelConversion(file.ID)
 						skipList[file.ID] = true
+						BroadcastMessage(Message{
+							MessageType: DeleteFile,
+							Data:        map[string]File{file.ID: file},
+						})
+						delete(fileList, file.ID)
 						break
 					}
 				}

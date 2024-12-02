@@ -16,6 +16,8 @@ type MessageType string
 const (
 	RefreshFiles MessageType = "refresh_files"
 	UpdateFile   MessageType = "update_file"
+	CreateFile   MessageType = "create_file"
+	DeleteFile   MessageType = "delete_file"
 )
 
 type Message struct {
@@ -86,6 +88,10 @@ func hashMessage(message Message) string {
 	}
 
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func BroadcastMessage(message Message) {
+	broadcast <- message
 }
 
 func BroadcastFiles(fileList map[string]File) {

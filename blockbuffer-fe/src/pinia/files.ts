@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { FileMessage, File as MediaFile } from "~/types/files";
+import { MessageTypes, type FileMessage, type File as MediaFile } from "~/types/files";
 import { getFiles, uploadFiles } from "~/apiClient/files";
 import { useWebSocket } from "~/composables/useWebSocket";
 
@@ -31,14 +31,22 @@ export const useFilesStore = defineStore("files", {
         return;
       }
 
-      Object.values(message.data).forEach((file) => {
-        const fileIndex = this.files.findIndex((f) => f.id === file.id);
-        if (fileIndex === -1) {
-          this.files.push(file);
-        } else {
-          this.files[fileIndex] = file;
-        }
-      });
+      switch (message.type) {
+        case MessageTypes.DELETE_FILE:
+          Object.keys(message.data).forEach((id: string) => {
+            this.files = this.files.filter((file) => file.id !== id);
+          });
+          break;
+        default:
+          Object.values(message.data).forEach((file) => {
+            const fileIndex = this.files.findIndex((f) => f.id === file.id);
+            if (fileIndex === -1) {
+              this.files.push(file);
+            } else {
+              this.files[fileIndex] = file;
+            }
+          });
+      }
     }
   },
 });
