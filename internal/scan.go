@@ -15,13 +15,13 @@ import (
 )
 
 type File struct {
-	ID       string `json:"id"`
-	FilePath string `json:"filePath"`
-	Status   string `json:"status"`
-	Progress int    `json:"progress"`
+	ID       string  `json:"id"`
+	FilePath string  `json:"filePath"`
+	Status   string  `json:"status"`
+	Progress float32 `json:"progress"`
 }
 
-var fileListMutex = &sync.Mutex{}
+var FileListMutex = &sync.Mutex{}
 var fileList = make(map[string]File)
 
 // isVideoFile checks if a file is a supported video format (case-insensitive)
@@ -48,10 +48,10 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 				Status:   "queued",
 				Progress: 0,
 			}
-			fileListMutex.Lock()
+			FileListMutex.Lock()
 			fileList[file.ID] = file
 			fmt.Println("file: ", file)
-			fileListMutex.Unlock()
+			FileListMutex.Unlock()
 
 			if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 				fmt.Printf("Queueing file for conversion: %s\n", inputFile)
@@ -60,9 +60,9 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 				fmt.Printf("Output file already exists: %s\n", outputFile)
 				file.Status = "done"
 				file.Progress = 100
-				fileListMutex.Lock()
+				FileListMutex.Lock()
 				fileList[file.ID] = file
-				fileListMutex.Unlock()
+				FileListMutex.Unlock()
 			}
 		}
 	}
@@ -98,9 +98,9 @@ func WatchDirectory(inputDir, outputDir string) {
 						Progress: 0,
 					}
 					fileQueue <- file
-					fileListMutex.Lock()
+					FileListMutex.Lock()
 					fileList[file.ID] = file
-					fileListMutex.Unlock()
+					FileListMutex.Unlock()
 					BroadcastFiles(fileList)
 
 					// remove file from skip list

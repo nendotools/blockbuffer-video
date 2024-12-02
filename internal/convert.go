@@ -208,7 +208,7 @@ func TempSock(totalDuration float64, fileId string) string {
 			}
 			if cp > 0.00 && cp <= 1.00 {
 				fmt.Printf("\033[2K\rProgress: %.2f%%", cp*100)
-				updateProgress(fileId, int(cp*100))
+				updateProgress(fileId, float32(cp*100))
 				if cp == 1.00 {
 					l.Close()
 					break
@@ -220,15 +220,15 @@ func TempSock(totalDuration float64, fileId string) string {
 	return sockFileName
 }
 
-func updateProgress(fileId string, progress int) {
-	fileListMutex.Lock()
+func updateProgress(fileId string, progress float32) {
+	FileListMutex.Lock()
 	fileList[fileId] = File{
 		ID:       fileId,
 		FilePath: fileList[fileId].FilePath,
 		Status:   Ternary(progress == 100, "Completed", Ternary(progress == -1, "Failure", "Processing")),
 		Progress: progress,
 	}
-	fileListMutex.Unlock()
+	FileListMutex.Unlock()
 
 	BroadcastFiles(map[string]File{fileId: fileList[fileId]})
 }

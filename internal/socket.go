@@ -25,19 +25,17 @@ func HandleSocketConnections(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	BroadcastFiles(fileList)
-
-	log.Println("Connected to server")
 	defer ws.Close()
 	clients[ws] = true
+	ws.WriteJSON(fileList)
+	log.Println("Connected to server")
 	for {
-		var files []File
-		err := ws.ReadJSON(&files)
+		var messages []File
+		err := ws.ReadJSON(&messages)
 		if err != nil {
 			delete(clients, ws)
 			return
 		}
-		broadcast <- files
 	}
 }
 
