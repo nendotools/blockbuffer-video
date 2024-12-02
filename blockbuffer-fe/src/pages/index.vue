@@ -1,6 +1,6 @@
 <template>
   <div class="main">
-    <div class="menu">
+    <div v-if="!isMobile" class="menu">
       menu
     </div>
     <div class="file-list">
@@ -11,7 +11,7 @@
       <template #icon-left>
         <Icon name="upload" size="md" />
       </template>
-      upload file
+      upload video(s)
     </Button>
   </div>
 </template>

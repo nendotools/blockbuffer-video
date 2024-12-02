@@ -44,11 +44,11 @@ func init() {
 	opts := getopts.New()
 	opts.HelpCommand("h", opts.Alias("help"))
 	Port = opts.Int("p", 8080, opts.Description("Port to listen on"), opts.Alias("port"))
-	WatchDir = opts.String("w", "/mnt/internal-ssd/auto-convert/input", opts.Description("Directory to watch for new files"), opts.Alias("watch-dir"))
-	OutputDir = opts.String("o", "/mnt/internal-ssd/auto-convert/output", opts.Description("Directory to output converted files"), opts.Alias("output-dir"))
-	UploadDir = opts.String("u", "/mnt/internal-ssd/auto-convert/upload", opts.Description("Directory to store files being uploaded by the user"), opts.Alias("upload-dir"))
 	maxConcurrent = opts.Int("c", 1, opts.Description("Max number of concurrent conversions"), opts.Alias("concurrency"))
 	maxQueueSize = opts.Int("q", 100, opts.Description("Max number of files to queue"), opts.Alias("queue-size"))
+	WatchDir = opts.String("w", "./media/input", opts.Description("Directory to watch for new files"), opts.Alias("watch-dir"))
+	OutputDir = opts.String("o", "./media/output", opts.Description("Directory to output converted files"), opts.Alias("output-dir"))
+	UploadDir = opts.String("u", "./media/upload", opts.Description("Directory to store files being uploaded by the user"), opts.Alias("upload-dir"))
 
 	opts.Parse(os.Args[1:])
 	if opts.Called("help") {
