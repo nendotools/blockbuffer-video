@@ -142,7 +142,7 @@ func convertToDNxHR(inputFile File, outputDir string) {
 	}
 
 	convertWithProgress(inputFile.ID, inputFile.FilePath, outputPath, ffmpegArgs)
-	updateProgress(inputFile.ID, 100)
+	updateProgress(inputFile.ID, 100, true)
 	fmt.Printf("Successfully converted: %s -> %s\n", inputFile.FilePath, outputPath)
 	<-conv
 }
@@ -176,7 +176,7 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 	}
 	fmt.Println("Conversion running")
 
-	defer Cmd.Process.Signal(os.Interrupt)
+	defer CancelConversion(fileId)
 
 	fmt.Printf("Successfully queued file: %s -> %s\n", inFileName, outFileName)
 }
@@ -194,7 +194,7 @@ func TempSock(totalDuration float64, fileId string) string {
 	sockFileName := path.Join(os.TempDir(), fmt.Sprintf("%d_sock", rand.Int()))
 	l, err := net.Listen("unix", sockFileName)
 	if err != nil {
-		updateProgress(fileId, -1)
+		updateProgress(fileId, -1, true)
 		panic(err)
 	}
 
@@ -221,12 +221,12 @@ func TempSock(totalDuration float64, fileId string) string {
 			}
 			if strings.Contains(data, "progress=end") {
 				cp = 1.00
-				updateProgress(fileId, 100)
+				updateProgress(fileId, 100, true)
 				break
 			}
 			if cp > 0.00 && cp <= 1.00 {
 				fmt.Printf("\033[2K\rProgress: %.2f%%", cp*100)
-				updateProgress(fileId, float32(cp*100))
+				updateProgress(fileId, float32(cp*100), false)
 				if cp == 1.00 {
 					l.Close()
 					break
@@ -238,7 +238,7 @@ func TempSock(totalDuration float64, fileId string) string {
 	return sockFileName
 }
 
-func updateProgress(fileId string, progress float32) {
+func updateProgress(fileId string, progress float32, mustSend bool) {
 	if _, ok := fileList[fileId]; !ok {
 		return
 	}
@@ -251,7 +251,13 @@ func updateProgress(fileId string, progress float32) {
 	}
 	FileListMutex.Unlock()
 
-	BroadcastFiles(map[string]File{fileId: fileList[fileId]})
+	BroadcastMessage(Message{
+		MessageType: UpdateFile,
+		MustSend:    mustSend,
+		Data: map[string]File{
+			fileId: fileList[fileId],
+		},
+	})
 }
 
 func CancelConversion(fileId string) {

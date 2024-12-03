@@ -1,24 +1,29 @@
 <template>
-  <button :class="[size, variant, { bottomHighlight }]">
+  <button v-if="!loading" :class="[size, variant, { bottomHighlight }]">
     <slot name="icon-left" />
     <slot />
     <slot name="icon-right" />
   </button>
+  <button v-else class="dim" :class="[size, { bottomHighlight }]" disabled>
+    uploading...
+  </button>
 </template>
 
 <script lang="ts" setup>
+
 withDefaults(
   defineProps<{
     variant: 'primary' | 'plain';
     size?: 'sm' | 'md' | 'lg';
     bottomHighlight?: boolean;
+    loading?: boolean;
   }>(),
   {
     variant: 'plain',
     size: 'md',
     bottomHighlight: false,
+    loading: false,
   });
-
 </script>
 
 <style lang="scss" scoped>
@@ -58,6 +63,12 @@ button {
   &.plain {
     background-color: unset;
     color: var(--color-text-primary);
+  }
+
+  &.dim {
+    background-color: #ffffff10;
+    color: var(--color-text-placeholder);
+    cursor: wait;
   }
 
   &.bottomHighlight {

@@ -62,7 +62,7 @@ func HandleMessages() {
 	for {
 		message := <-broadcast
 		hash := hashMessage(message)
-		if message.MessageType != RefreshFiles && !message.MustSend {
+		if message.MessageType != RefreshFiles {
 			if lastSent, exists := outboundMessages[hash]; exists && time.Since(lastSent) < 2*time.Second {
 				continue
 			}

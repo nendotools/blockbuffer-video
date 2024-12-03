@@ -11,15 +11,18 @@ import feather from 'feather-icons';
 const props = withDefaults(defineProps<{
   name: string;
   size?: "sm" | "md" | "lg";
+  animation?: "spin" | null;
 }>(),
   {
     size: 'md',
+    animation: null
   });
 
 const iconClasses = computed(() => {
   return [
     'icon',
     `icon-${props.size}`,
+    { 'icon-spin': props.animation === 'spin' }
   ];
 });
 
@@ -56,6 +59,16 @@ onMounted(() => {
       width: 3rem;
       height: 3rem;
     }
+  }
+
+  &.icon-spin {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

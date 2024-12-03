@@ -7,7 +7,7 @@
       <ListFile v-for="file in files" :key="file.id" fileType="video" :file="file" />
     </div>
 
-    <Button variant="primary" class="floating-upload" @click="selectFiles">
+    <Button variant="primary" class="floating-upload" :loading="uploading" @click="selectFiles">
       <template #icon-left>
         <Icon name="upload" size="md" />
       </template>
@@ -17,18 +17,22 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted } from '#imports';
+import { computed, onMounted } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
 import Button from '@/components/ui/Button.vue';
 import ListFile from '@/components/elements/ListFile.vue';
 import { storeToRefs } from 'pinia';
 import { useGlobalStore } from '@/pinia/global';
-import { useFilesStore } from '@/pinia/files';
+import { MEDIA_UPLOAD_KEY, useFilesStore } from '@/pinia/files';
+import { useLoaderStore } from '~/pinia/loader';
 
 const fileStore = useFilesStore();
+const loaderStore = useLoaderStore();
 const globalStore = useGlobalStore();
 const { isMobile } = storeToRefs(globalStore);
 const { files } = storeToRefs(fileStore);
+
+const uploading = computed(() => loaderStore.isLoading(MEDIA_UPLOAD_KEY));
 
 onMounted(async () => {
   await fileStore.initSocket();

@@ -2,6 +2,9 @@ import { defineStore } from "pinia";
 import { MessageTypes, type FileMessage, type File as MediaFile } from "~/types/files";
 import { getFiles, uploadFiles } from "~/apiClient/files";
 import { useWebSocket } from "~/composables/useWebSocket";
+import { useLoaderStore } from "./loader";
+
+export const MEDIA_UPLOAD_KEY = "media-upload";
 
 interface State {
   files: MediaFile[];
@@ -22,7 +25,10 @@ export const useFilesStore = defineStore("files", {
       this.files = data;
     },
     async uploadFiles(files: File[]) {
+      const loader = useLoaderStore();
+      loader.start(MEDIA_UPLOAD_KEY);
       const data = await uploadFiles(files);
+      loader.end(MEDIA_UPLOAD_KEY);
       console.log(data);
     },
 
