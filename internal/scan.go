@@ -17,13 +17,14 @@ import (
 type FileStatus string
 
 const (
-	New        FileStatus = "new"
-	Queued     FileStatus = "queued"
-	Processing FileStatus = "processing"
-	Completed  FileStatus = "completed"
-	Cancelled  FileStatus = "cancelled"
-	Failed     FileStatus = "failed"
-	Deleted    FileStatus = "deleted"
+	New             FileStatus = "new"
+	Queued          FileStatus = "queued"
+	Processing      FileStatus = "processing"
+	Completed       FileStatus = "completed"
+	CompleteDeleted FileStatus = "completed-deleted"
+	Cancelled       FileStatus = "cancelled"
+	Failed          FileStatus = "failed"
+	Deleted         FileStatus = "deleted"
 )
 
 type File struct {
@@ -140,6 +141,9 @@ func WatchDirectory(inputDir string, outputDir string) {
 						fmt.Println("canceling conversion: ", file.ID)
 						CancelConversion(file.ID)
 						skipList[file.ID] = true
+						if file.Status == CompleteDeleted {
+							break
+						}
 						BroadcastMessage(Message{
 							MessageType: DeleteFile,
 							Data:        map[string]File{file.ID: file},

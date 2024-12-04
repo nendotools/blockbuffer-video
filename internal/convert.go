@@ -147,6 +147,9 @@ func convertToDNxHR(inputFile File, outputDir string) {
 	ffmpegArgs["profile:v"] = "dnxhr_hq"
 	ffmpegArgs["pix_fmt"] = "yuv420p"
 	ffmpegArgs["c:a"] = "pcm_s16le"
+	if *IgnoreExisting {
+		ffmpegArgs["y"] = nil
+	}
 
 	// set resolution
 	if inputWidth > inputHeight && inputHeight > 1080 {
@@ -157,6 +160,13 @@ func convertToDNxHR(inputFile File, outputDir string) {
 
 	convertWithProgress(inputFile.ID, inputFile.FilePath, outputPath, ffmpegArgs)
 	updateProgress(inputFile.ID, 100, true)
+	if *DeleteAfter {
+		_, err := os.Stat(inputFile.FilePath)
+		if err == nil {
+			os.Remove(inputFile.FilePath)
+		}
+	}
+
 	fmt.Printf("Successfully converted: %s -> %s\n", inputFile.FilePath, outputPath)
 	<-conv
 }
@@ -188,10 +198,8 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 	if err != nil {
 		fmt.Printf("Error converting file: %v\n", err)
 	}
-	fmt.Println("Conversion running")
 
 	defer CancelConversion(fileId)
-
 	fmt.Printf("Successfully queued file: %s -> %s\n", inFileName, outFileName)
 }
 
@@ -257,11 +265,13 @@ func updateProgress(fileId string, progress float32, mustSend bool) {
 	if !ok {
 		return
 	}
+	var completionStatus = Ternary(*DeleteAfter, string(CompleteDeleted), string(Completed))
+
 	FileListMutex.Lock()
 	fileList[fileId] = File{
 		ID:       fileId,
 		FilePath: file.FilePath,
-		Status:   FileStatus(Ternary(progress == 100, string(Completed), Ternary(progress == -1, string(Failed), string(Processing)))),
+		Status:   FileStatus(Ternary(progress == 100, completionStatus, Ternary(progress == -1, string(Failed), string(Processing)))),
 		Duration: file.Duration,
 		Progress: progress,
 	}
