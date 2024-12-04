@@ -103,9 +103,10 @@ var InputProbeData = probeData{}
 
 // convertToDNxHR runs FFmpeg to convert the video to DNxHR
 func convertToDNxHR(inputFile File, outputDir string) {
-	if !*AutoConvert {
-		time.Sleep(10 * time.Second)
+	for !*AutoConvert {
+		time.Sleep(2 * time.Second)
 	}
+
 	conv <- 1
 	if !waitForFileReady(inputFile.FilePath) {
 		fmt.Printf("File %s is not ready to be processed\n", inputFile.ID)

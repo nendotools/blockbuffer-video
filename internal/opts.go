@@ -29,6 +29,7 @@ var UploadDir *string // UploadDir is the directory to store files being uploade
  * CONVERSION OPTIONS
  **/
 var conv chan int        // conv is a channel to limit the number of concurrent conversions
+var blockAuto chan bool  // blockAuto is a channel to block automatic conversion
 var maxConcurrent *int   // max number of concurrent conversions
 var AutoConvert *bool    // true to automatically convert files in the watch directory
 var DeleteAfter *bool    // true to delete source files after conversion
