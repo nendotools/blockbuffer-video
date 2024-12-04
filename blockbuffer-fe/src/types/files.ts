@@ -3,6 +3,7 @@ export interface File {
   filePath: string;
   status: string;
   progress: number;
+  duration: number; // in seconds
 }
 
 export enum MessageTypes {

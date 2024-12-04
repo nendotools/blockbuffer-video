@@ -29,9 +29,19 @@ type Conversion struct {
 	cmd     *exec.Cmd
 }
 
+func PollFile(inputFile string) float64 {
+	a, err := ffmpeg.Probe(inputFile)
+	CheckError(err)
+	err = json.Unmarshal([]byte(a), &InputProbeData)
+	CheckError(err)
+	totalDuration, err := ProbeDuration(InputProbeData)
+	CheckError(err)
+	return totalDuration
+}
+
 var ConversionMap = make(map[string]Conversion)
 
-func Ternary(condition bool, a, b string) string {
+func Ternary(condition bool, a string, b string) string {
 	if condition {
 		return a
 	}
@@ -89,10 +99,13 @@ type probeData struct {
 	} `json:"format"`
 }
 
-var inputProbeData = probeData{}
+var InputProbeData = probeData{}
 
 // convertToDNxHR runs FFmpeg to convert the video to DNxHR
 func convertToDNxHR(inputFile File, outputDir string) {
+	if !*AutoConvert {
+		time.Sleep(10 * time.Second)
+	}
 	conv <- 1
 	if !waitForFileReady(inputFile.FilePath) {
 		fmt.Printf("File %s is not ready to be processed\n", inputFile.ID)
@@ -106,10 +119,10 @@ func convertToDNxHR(inputFile File, outputDir string) {
 	outputPath := filepath.Join(outputDir, outputFile)
 
 	// probe input file
-	if len(inputProbeData.Streams) == 0 {
+	if len(InputProbeData.Streams) == 0 {
 		a, err := ffmpeg.Probe(inputFile.FilePath)
 		CheckError(err)
-		err = json.Unmarshal([]byte(a), &inputProbeData)
+		err = json.Unmarshal([]byte(a), &InputProbeData)
 		CheckError(err)
 	}
 
@@ -118,7 +131,7 @@ func convertToDNxHR(inputFile File, outputDir string) {
 
 	// find width / height of video stream
 	if inputWidth == 0 {
-		for _, stream := range inputProbeData.Streams {
+		for _, stream := range InputProbeData.Streams {
 			if stream.Width != 0 && stream.Height != 0 {
 				inputWidth = stream.Width
 				inputHeight = stream.Height
@@ -152,7 +165,7 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 	var err error
 
 	// get duration of video (3 seconds if preview mode)
-	totalDuration, err := probeDuration(inputProbeData)
+	totalDuration, err := ProbeDuration(InputProbeData)
 	CheckError(err)
 
 	fmt.Println("preparing conversion")
@@ -181,7 +194,7 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 	fmt.Printf("Successfully queued file: %s -> %s\n", inFileName, outFileName)
 }
 
-func probeDuration(data probeData) (float64, error) {
+func ProbeDuration(data probeData) (float64, error) {
 	f, err := strconv.ParseFloat(data.Format.Duration, 64)
 	if err != nil {
 		return 0, err
@@ -239,14 +252,16 @@ func TempSock(totalDuration float64, fileId string) string {
 }
 
 func updateProgress(fileId string, progress float32, mustSend bool) {
-	if _, ok := fileList[fileId]; !ok {
+	file, ok := fileList[fileId]
+	if !ok {
 		return
 	}
 	FileListMutex.Lock()
 	fileList[fileId] = File{
 		ID:       fileId,
-		FilePath: fileList[fileId].FilePath,
-		Status:   Ternary(progress == 100, "Completed", Ternary(progress == -1, "Failure", "Processing")),
+		FilePath: file.FilePath,
+		Status:   FileStatus(Ternary(progress == 100, string(Completed), Ternary(progress == -1, string(Failed), string(Processing)))),
+		Duration: file.Duration,
 		Progress: progress,
 	}
 	FileListMutex.Unlock()

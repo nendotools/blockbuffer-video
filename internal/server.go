@@ -18,6 +18,23 @@ import (
 	"strings"
 )
 
+type Config struct {
+	AutoConvert    *bool `json:"autoConvert,omitempty"`
+	DeleteAfter    *bool `json:"deleteAfter,omitempty"`
+	IgnoreExisting *bool `json:"ignoreExisting,omitempty"`
+}
+
+func SuccessJSON(w http.ResponseWriter, message string, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	jsonData := json.NewEncoder(w)
+	var response = map[string]interface{}{"message": message}
+	if data != nil {
+		response = map[string]interface{}{"message": message, "data": data}
+	}
+	jsonData.Encode(response)
+}
+
 func ErrorJSON(w http.ResponseWriter, message string, code int) {
 	// respond with json formatted error message
 	w.Header().Set("Content-Type", "application/json")
@@ -115,9 +132,47 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	// handle routing requests with router
 	router := http.NewServeMux()
+	router.HandleFunc("GET /config", configHandler)
+	router.HandleFunc("POST /config", configHandler)
 	router.HandleFunc("GET /files", filesHandler)
 	router.HandleFunc("POST /upload", HandleUploadMultipleFiles)
 	router.ServeHTTP(w, r)
+}
+
+func configHandler(w http.ResponseWriter, r *http.Request) {
+	// handle GET
+	if r.Method == "GET" {
+		// respond with json formatted configuration
+		w.Header().Set("Content-Type", "application/json")
+		jsonData := json.NewEncoder(w)
+		jsonData.Encode(map[string]interface{}{
+			"autoConvert":    AutoConvert,
+			"deleteAfter":    DeleteAfter,
+			"ignoreExisting": IgnoreExisting,
+		})
+	}
+
+	// handle POST
+	if r.Method == "POST" {
+		w.Header().Set("Content-Type", "application/json")
+		// parse request body as Config
+		var config Config = Config{}
+		if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
+			ErrorJSON(w, "Failed to decode request body", http.StatusBadRequest)
+			return
+		}
+
+		if config.AutoConvert != nil {
+			AutoConvert = config.AutoConvert
+		}
+		if config.DeleteAfter != nil {
+			DeleteAfter = config.DeleteAfter
+		}
+		if config.IgnoreExisting != nil {
+			IgnoreExisting = config.IgnoreExisting
+		}
+		SuccessJSON(w, "success", nil)
+	}
 }
 
 func filesHandler(w http.ResponseWriter, r *http.Request) {

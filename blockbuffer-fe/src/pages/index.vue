@@ -1,7 +1,15 @@
 <template>
   <div class="main">
     <div v-if="!isMobile" class="menu">
-      menu
+      <h4>Conversion Settings</h4>
+
+      <div class="opt-group">
+        <Checkbox :checked="globalStore.autoConvert" label="Auto-convert" @toggle="globalStore.toggleAutoConvert" />
+        <Checkbox :checked="globalStore.deleteAfterConvert" label="Delete after convert"
+          @toggle="globalStore.toggleDeleteAfterConvert" />
+        <Checkbox :checked="globalStore.ignoreExisting" label="Ignore existing files"
+          @toggle="globalStore.toggleIgnoreExisting" />
+      </div>
     </div>
     <div class="file-list">
       <ListFile v-for="file in files" :key="file.id" fileType="video" :file="file" />
@@ -20,6 +28,7 @@
 import { computed, onMounted } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
 import Button from '@/components/ui/Button.vue';
+import Checkbox from '~/components/forms/Checkbox.vue';
 import ListFile from '@/components/elements/ListFile.vue';
 import { storeToRefs } from 'pinia';
 import { useGlobalStore } from '@/pinia/global';
@@ -35,6 +44,7 @@ const { files } = storeToRefs(fileStore);
 const uploading = computed(() => loaderStore.isLoading(MEDIA_UPLOAD_KEY));
 
 onMounted(async () => {
+  globalStore.fetchSettings();
   await fileStore.initSocket();
 });
 
@@ -63,7 +73,7 @@ const selectFiles = (event: Event) => {
 }
 
 .menu {
-  min-width: 200px;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
   padding: var(--spacing-md) var(--spacing-lg);
@@ -73,7 +83,7 @@ const selectFiles = (event: Event) => {
 .file-list {
   width: 100%;
   overflow-y: auto;
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: 0 var(--spacing-lg);
   padding-right: 0;
   background-color: var(--color-background-secondary);
 }
@@ -83,5 +93,12 @@ const selectFiles = (event: Event) => {
   bottom: var(--spacing-lg);
   right: var(--spacing-xl);
   z-index: 100;
+}
+
+.opt-group {
+  margin-top: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 </style>

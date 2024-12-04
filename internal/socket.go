@@ -11,6 +11,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+const (
+	pollingInterval = 2 * time.Second
+)
+
 type MessageType string
 
 const (
@@ -63,7 +67,7 @@ func HandleMessages() {
 		message := <-broadcast
 		hash := hashMessage(message)
 		if message.MessageType != RefreshFiles && !message.MustSend {
-			if lastSent, exists := outboundMessages[hash]; exists && time.Since(lastSent) < 2*time.Second {
+			if lastSent, exists := outboundMessages[hash]; exists && time.Since(lastSent) < pollingInterval {
 				continue
 			}
 		}

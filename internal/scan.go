@@ -14,11 +14,24 @@ import (
 	"github.com/u2takey/go-utils/uuid"
 )
 
+type FileStatus string
+
+const (
+	New        FileStatus = "new"
+	Queued     FileStatus = "queued"
+	Processing FileStatus = "processing"
+	Completed  FileStatus = "completed"
+	Cancelled  FileStatus = "cancelled"
+	Failed     FileStatus = "failed"
+	Deleted    FileStatus = "deleted"
+)
+
 type File struct {
-	ID       string  `json:"id"`
-	FilePath string  `json:"filePath"`
-	Status   string  `json:"status"`
-	Progress float32 `json:"progress"`
+	ID       string     `json:"id"`
+	FilePath string     `json:"filePath"`
+	Status   FileStatus `json:"status"`
+	Progress float32    `json:"progress"`
+	Duration float64    `json:"duration"`
 }
 
 var FileListMutex = &sync.Mutex{}
@@ -40,12 +53,16 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 	for _, file := range files {
 		if !file.IsDir() && isVideoFile(file.Name()) {
 			inputFile := file.Name()
+			var filePath = inputDir + "/" + inputFile
+			var totalDuration = PollFile(filePath)
+
 			outputFile := strings.TrimSuffix(inputFile, filepath.Ext(inputFile)) + "_dnxhr.mov"
 			outputPath := filepath.Join(outputDir, outputFile)
 			file := File{
 				ID:       uuid.NewUUID(),
-				FilePath: inputDir + "/" + inputFile,
-				Status:   "queued",
+				FilePath: filePath,
+				Duration: totalDuration,
+				Status:   Queued,
 				Progress: 0,
 			}
 			FileListMutex.Lock()
@@ -58,7 +75,7 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 				fileQueue <- file
 			} else {
 				fmt.Printf("Output file already exists: %s\n", outputFile)
-				file.Status = "done"
+				file.Status = Completed
 				file.Progress = 100
 				FileListMutex.Lock()
 				fileList[file.ID] = file
@@ -92,10 +109,12 @@ func WatchDirectory(inputDir string, outputDir string) {
 				// When a new file is created, process it if it's a video file
 				if isVideoFile(event.Name) {
 					fmt.Printf("Detected new video: %s\n", event.Name)
+					var totalDuration = PollFile(event.Name)
 					file := File{
 						ID:       uuid.NewUUID(),
 						FilePath: event.Name,
-						Status:   "queued",
+						Status:   Queued,
+						Duration: totalDuration,
 						Progress: 0,
 					}
 					fileQueue <- file
