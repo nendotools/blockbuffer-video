@@ -2,13 +2,10 @@
 //   - files in directory
 //   - converted files
 //   - progress of conversion
-package internal
+package api
 
 import (
 	"encoding/json"
-	"fmt"
-	"io"
-	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -16,6 +13,11 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"blockbuffer/internal/io"
+	opts "blockbuffer/internal/settings"
+	store "blockbuffer/internal/store"
+	types "blockbuffer/internal/types"
 )
 
 type Config struct {
@@ -24,30 +26,11 @@ type Config struct {
 	IgnoreExisting *bool `json:"ignoreExisting,omitempty"`
 }
 
-func SuccessJSON(w http.ResponseWriter, message string, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	jsonData := json.NewEncoder(w)
-	var response = map[string]interface{}{"message": message}
-	if data != nil {
-		response = map[string]interface{}{"message": message, "data": data}
-	}
-	jsonData.Encode(response)
-}
-
-func ErrorJSON(w http.ResponseWriter, message string, code int) {
-	// respond with json formatted error message
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	jsonData := json.NewEncoder(w)
-	jsonData.Encode(map[string]interface{}{"error": message, "code": code})
-}
-
 func isDevServer() bool {
 	// Get the executable path
 	execPath, err := os.Executable()
 	if err != nil {
-		log.Fatalf("Failed to determine executable path: %v", err)
+		io.SLogf("Failed to determine executable path: %v", io.Error, err)
 	}
 
 	// Check if the path indicates a temporary binary (used by `go run`)
@@ -55,39 +38,24 @@ func isDevServer() bool {
 	return strings.HasPrefix(execPath, tempDir)
 }
 
-type filterWriter struct {
-	writer io.Writer
-}
-
-func (fw *filterWriter) Write(p []byte) (n int, err error) {
-	// get string from byte slice
-	// filter out nuxt.js logs
-	// write to writer
-	s := string(p)
-	if !strings.Contains(s, "WARN  Deprecation") {
-		return fw.writer.Write(p)
-	}
-	return len(p), nil
-}
-
 func startNuxtDev() {
 	cmd := exec.Command("yarn", "dev")
 	cmd.Dir = "./blockbuffer-fe"
 
 	// listen to stdout and stderr and pass to stdout with prefix "NUXT: "
-	cmd.Stdout = &filterWriter{writer: log.Writer()}
-	cmd.Stderr = &filterWriter{writer: log.Writer()}
+	cmd.Stdout = types.Writer()
+	cmd.Stderr = types.Writer()
 
-	log.Println("Starting Nuxt.js development server...")
+	io.Log("Starting Nuxt.js development server...")
 	if err := cmd.Start(); err != nil {
-		log.Fatalf("Failed to start Nuxt.js: %v", err)
+		io.SLogf("Failed to start Nuxt.js: %v", io.Fatal, err)
 	}
 
 	// Wait for the process to exit or handle as a background process
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			log.Printf("Nuxt.js process exited with error: %v", err)
+			io.SLogf("Nuxt.js process exited with error: %v", io.Fatal, err)
 		}
 	}()
 }
@@ -103,7 +71,7 @@ func proxyToNuxtDev(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartServer() {
-	if *Headless {
+	if *opts.Headless {
 		return
 	}
 
@@ -120,9 +88,9 @@ func StartServer() {
 	http.HandleFunc("/ws", HandleSocketConnections)
 
 	http.Handle("/api/", http.StripPrefix("/api", http.HandlerFunc(apiHandler)))
-	fmt.Printf("Server listening on port %s\n", strconv.Itoa(*Port))
-	log.Panic(
-		http.ListenAndServe(*ListenAddr+":"+strconv.Itoa(*Port), nil),
+	io.SLogf("Server listening on port: %s\n", io.Info, strconv.Itoa(*opts.Port))
+	io.Panicf(
+		http.ListenAndServe(*opts.ListenAddr+":"+strconv.Itoa(*opts.Port), nil),
 	)
 }
 
@@ -140,48 +108,39 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func configHandler(w http.ResponseWriter, r *http.Request) {
-	// handle GET
 	if r.Method == "GET" {
-		// respond with json formatted configuration
-		w.Header().Set("Content-Type", "application/json")
-		jsonData := json.NewEncoder(w)
-		jsonData.Encode(map[string]interface{}{
-			"autoConvert":    AutoConvert,
-			"deleteAfter":    DeleteAfter,
-			"ignoreExisting": IgnoreExisting,
+		io.SuccessJSON(w, map[string]interface{}{
+			"autoConvert":    opts.AutoConvert,
+			"deleteAfter":    opts.DeleteAfter,
+			"ignoreExisting": opts.IgnoreExisting,
 		})
 	}
 
-	// handle POST
 	if r.Method == "POST" {
-		w.Header().Set("Content-Type", "application/json")
-		// parse request body as Config
 		var config Config = Config{}
 		if err := json.NewDecoder(r.Body).Decode(&config); err != nil {
-			ErrorJSON(w, "Failed to decode request body", http.StatusBadRequest)
+			io.ErrorJSON(w, "Failed to decode request body", http.StatusBadRequest)
 			return
 		}
 
 		if config.AutoConvert != nil {
-			AutoConvert = config.AutoConvert
+			opts.AutoConvert = config.AutoConvert
 		}
 		if config.DeleteAfter != nil {
-			DeleteAfter = config.DeleteAfter
+			opts.DeleteAfter = config.DeleteAfter
 		}
 		if config.IgnoreExisting != nil {
-			IgnoreExisting = config.IgnoreExisting
+			opts.IgnoreExisting = config.IgnoreExisting
 		}
-		SuccessJSON(w, "success", nil)
+		io.SuccessJSON(w, "success")
 	}
 }
 
 func filesHandler(w http.ResponseWriter, r *http.Request) {
-	// respond with json formatted list from fileList
 	w.Header().Set("Content-Type", "application/json")
-	jsonData := json.NewEncoder(w)
-	fileArray := []File{}
-	for _, file := range fileList {
+	fileArray := []types.File{}
+	for _, file := range store.FileList {
 		fileArray = append(fileArray, file)
 	}
-	jsonData.Encode(fileArray)
+	io.SuccessJSON(w, fileArray)
 }

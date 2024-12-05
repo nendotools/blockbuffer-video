@@ -1,6 +1,6 @@
 // This file handles scanning of directories and files. It also
 // handles managing the conversion queue.
-package internal
+package filesystem
 
 import (
 	"fmt"
@@ -8,35 +8,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/u2takey/go-utils/uuid"
+
+	api "blockbuffer/internal/api"
+	store "blockbuffer/internal/store"
+	types "blockbuffer/internal/types"
 )
 
-type FileStatus string
-
-const (
-	New             FileStatus = "new"
-	Queued          FileStatus = "queued"
-	Processing      FileStatus = "processing"
-	Completed       FileStatus = "completed"
-	CompleteDeleted FileStatus = "completed-deleted"
-	Cancelled       FileStatus = "cancelled"
-	Failed          FileStatus = "failed"
-	Deleted         FileStatus = "deleted"
-)
-
-type File struct {
-	ID       string     `json:"id"`
-	FilePath string     `json:"filePath"`
-	Status   FileStatus `json:"status"`
-	Progress float32    `json:"progress"`
-	Duration float64    `json:"duration"`
-}
-
-var FileListMutex = &sync.Mutex{}
-var fileList = make(map[string]File)
+var skipList = make(map[string]bool)
 
 // isVideoFile checks if a file is a supported video format (case-insensitive)
 func isVideoFile(filePath string) bool {
@@ -59,28 +40,23 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 
 			outputFile := strings.TrimSuffix(inputFile, filepath.Ext(inputFile)) + "_dnxhr.mov"
 			outputPath := filepath.Join(outputDir, outputFile)
-			file := File{
+			file := types.File{
 				ID:       uuid.NewUUID(),
 				FilePath: filePath,
 				Duration: totalDuration,
-				Status:   Queued,
+				Status:   types.Queued,
 				Progress: 0,
 			}
-			FileListMutex.Lock()
-			fileList[file.ID] = file
-			fmt.Println("file: ", file)
-			FileListMutex.Unlock()
+			store.UpdateFile(file)
 
 			if _, err := os.Stat(outputPath); os.IsNotExist(err) {
 				fmt.Printf("Queueing file for conversion: %s\n", inputFile)
-				fileQueue <- file
+				store.FileQueue <- file
 			} else {
 				fmt.Printf("Output file already exists: %s\n", outputFile)
-				file.Status = Completed
+				file.Status = types.Completed
 				file.Progress = 100
-				FileListMutex.Lock()
-				fileList[file.ID] = file
-				FileListMutex.Unlock()
+				store.UpdateFile(file)
 			}
 		}
 	}
@@ -111,20 +87,18 @@ func WatchDirectory(inputDir string, outputDir string) {
 				if isVideoFile(event.Name) {
 					fmt.Printf("Detected new video: %s\n", event.Name)
 					var totalDuration = PollFile(event.Name)
-					file := File{
+					file := types.File{
 						ID:       uuid.NewUUID(),
 						FilePath: event.Name,
-						Status:   Queued,
+						Status:   types.Queued,
 						Duration: totalDuration,
 						Progress: 0,
 					}
-					fileQueue <- file
-					FileListMutex.Lock()
-					fileList[file.ID] = file
-					FileListMutex.Unlock()
-					BroadcastMessage(Message{
-						MessageType: CreateFile,
-						Data:        map[string]File{file.ID: file},
+					store.FileQueue <- file
+					store.UpdateFile(file)
+					api.BroadcastMessage(types.Message{
+						MessageType: types.CreateFile,
+						Data:        map[string]types.File{file.ID: file},
 					})
 
 					// remove file from skip list
@@ -135,20 +109,20 @@ func WatchDirectory(inputDir string, outputDir string) {
 				fmt.Printf("Detected removed video: %s\n", event.Name)
 				// add file to skip list
 				// search for the file path in the fileList.FilePath
-				for _, file := range fileList {
+				for _, file := range store.FileList {
 					fmt.Println(file.FilePath == event.Name, " file: ", file)
 					if file.FilePath == event.Name {
 						fmt.Println("canceling conversion: ", file.ID)
 						CancelConversion(file.ID)
 						skipList[file.ID] = true
-						if file.Status == CompleteDeleted {
+						if file.Status == types.CompleteDeleted {
 							break
 						}
-						BroadcastMessage(Message{
-							MessageType: DeleteFile,
-							Data:        map[string]File{file.ID: file},
+						api.BroadcastMessage(types.Message{
+							MessageType: types.DeleteFile,
+							Data:        map[string]types.File{file.ID: file},
 						})
-						delete(fileList, file.ID)
+						delete(store.FileList, file.ID)
 						break
 					}
 				}

@@ -1,4 +1,4 @@
-package internal
+package api
 
 import (
 	"crypto/sha256"
@@ -8,23 +8,15 @@ import (
 	"net/http"
 	"time"
 
+	"blockbuffer/internal/io"
+	store "blockbuffer/internal/store"
+	types "blockbuffer/internal/types"
 	"github.com/gorilla/websocket"
 )
 
-type MessageType string
-
 const (
-	RefreshFiles MessageType = "refresh_files"
-	UpdateFile   MessageType = "update_file"
-	CreateFile   MessageType = "create_file"
-	DeleteFile   MessageType = "delete_file"
+	pollingInterval = 2 * time.Second
 )
-
-type Message struct {
-	MessageType MessageType `json:"type"`
-	MustSend    bool        `json:"must_send"`
-	Data        interface{} `json:"data"`
-}
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin:     func(r *http.Request) bool { return true },
@@ -33,23 +25,23 @@ var upgrader = websocket.Upgrader{
 }
 
 var clients = make(map[*websocket.Conn]bool)
-var broadcast = make(chan Message)
+var broadcast = make(chan types.Message)
 var outboundMessages = make(map[string]time.Time)
 
 func HandleSocketConnections(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Failed to upgrade connection")
-		ErrorJSON(w, fmt.Sprintf("Failed to upgrade connection: %v", err), http.StatusInternalServerError)
+		io.ErrorJSON(w, fmt.Sprintf("Failed to upgrade connection: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	defer ws.Close()
 	clients[ws] = true
-	ws.WriteJSON(Message{MessageType: RefreshFiles, Data: fileList})
+	ws.WriteJSON(types.Message{MessageType: types.RefreshFiles, Data: store.FileList})
 	log.Println("Connected to server")
 	for {
-		var messages []File
+		var messages []types.File
 		err := ws.ReadJSON(&messages)
 		if err != nil {
 			delete(clients, ws)
@@ -62,8 +54,8 @@ func HandleMessages() {
 	for {
 		message := <-broadcast
 		hash := hashMessage(message)
-		if message.MessageType != RefreshFiles {
-			if lastSent, exists := outboundMessages[hash]; exists && time.Since(lastSent) < 2*time.Second {
+		if message.MessageType != types.RefreshFiles && !message.MustSend {
+			if lastSent, exists := outboundMessages[hash]; exists && time.Since(lastSent) < pollingInterval {
 				continue
 			}
 		}
@@ -79,7 +71,7 @@ func HandleMessages() {
 	}
 }
 
-func hashMessage(message Message) string {
+func hashMessage(message types.Message) string {
 	h := sha256.New()
 	h.Write([]byte(message.MessageType))
 	if dataMap, ok := message.Data.(map[string]interface{}); ok {
@@ -91,10 +83,10 @@ func hashMessage(message Message) string {
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func BroadcastMessage(message Message) {
+func BroadcastMessage(message types.Message) {
 	broadcast <- message
 }
 
-func BroadcastFiles(fileList map[string]File) {
-	broadcast <- Message{MessageType: UpdateFile, Data: fileList}
+func BroadcastFiles(fileList map[string]types.File) {
+	broadcast <- types.Message{MessageType: types.UpdateFile, Data: fileList}
 }

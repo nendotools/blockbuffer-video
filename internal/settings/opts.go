@@ -1,4 +1,4 @@
-package internal
+package settings
 
 import (
 	"fmt"
@@ -7,10 +7,6 @@ import (
 
 	getopts "github.com/DavidGamba/go-getoptions"
 )
-
-// fileQueue is a channel to queue files to be processed
-// This is used to avoid processing the same file multiple times
-// and prevent trigger multiple conversions at once
 
 type conversionDone string
 type progressMsg struct {
@@ -28,9 +24,8 @@ var UploadDir *string // UploadDir is the directory to store files being uploade
 /**
  * CONVERSION OPTIONS
  **/
-var conv chan int        // conv is a channel to limit the number of concurrent conversions
 var blockAuto chan bool  // blockAuto is a channel to block automatic conversion
-var maxConcurrent *int   // max number of concurrent conversions
+var MaxConcurrent *int   // max number of concurrent conversions
 var AutoConvert *bool    // true to automatically convert files in the watch directory
 var DeleteAfter *bool    // true to delete source files after conversion
 var IgnoreExisting *bool // true to overwrite already converted files
@@ -38,9 +33,7 @@ var IgnoreExisting *bool // true to overwrite already converted files
 /**
 *  FILE QUEUE OPTIONS
  **/
-var maxQueueSize *int
-var fileQueue chan File // fileQueue is a channel to queue files to be processed
-var skipList = make(map[string]bool)
+var MaxQueueSize *int
 
 const maxCheckInterval = 5 * time.Second
 const maxCheckRepeat = 30 // 5 minutes, to support larger files or slow writes
@@ -53,8 +46,8 @@ func init() {
 	ListenAddr = opts.String("listen", "127.0.0.1", opts.Description("Address to listen on"), opts.Alias("l"))
 	Headless = opts.Bool("headless", false, opts.Description("Run in headless mode"), opts.Alias("H"))
 
-	maxConcurrent = opts.Int("concurrency", 1, opts.Description("Max number of concurrent conversions"), opts.Alias("c"))
-	maxQueueSize = opts.Int("queue-size", 100, opts.Description("Max number of files to queue"), opts.Alias("q"))
+	MaxConcurrent = opts.Int("concurrency", 1, opts.Description("Max number of concurrent conversions"), opts.Alias("c"))
+	MaxQueueSize = opts.Int("queue-size", 100, opts.Description("Max number of files to queue"), opts.Alias("q"))
 	WatchDir = opts.String("watch-dir", "./media/input", opts.Description("Directory to watch for new files"), opts.Alias("w"))
 	OutputDir = opts.String("output-dir", "./media/output", opts.Description("Directory to output converted files"), opts.Alias("o"))
 	UploadDir = opts.String("upload-dir", "./media/upload", opts.Description("Directory to store files being uploaded by the user"), opts.Alias("u"))
@@ -77,6 +70,4 @@ func init() {
 	fmt.Println("watching", *WatchDir)
 	fmt.Println("outputting to", *OutputDir)
 	fmt.Println("uploading to", *UploadDir)
-	conv = make(chan int, *maxConcurrent)
-	fileQueue = make(chan File, *maxQueueSize)
 }

@@ -1,6 +1,6 @@
 // This file handles the conversion of files to DNxHR format and
 // communicates the progress of the conversion to the user.
-package internal
+package filesystem
 
 import (
 	"encoding/json"
@@ -17,9 +17,16 @@ import (
 	"strings"
 	"time"
 
+	api "blockbuffer/internal/api"
+	io "blockbuffer/internal/io"
+	opts "blockbuffer/internal/settings"
+	store "blockbuffer/internal/store"
+	types "blockbuffer/internal/types"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
+// var conv chan int // conv is a channel to limit the number of concurrent conversions
+var conv = make(chan int, *opts.MaxConcurrent)
 var Cmd *exec.Cmd
 
 // map file ID to Conversion command
@@ -31,11 +38,11 @@ type Conversion struct {
 
 func PollFile(inputFile string) float64 {
 	a, err := ffmpeg.Probe(inputFile)
-	CheckError(err)
+	io.CheckError(err)
 	err = json.Unmarshal([]byte(a), &InputProbeData)
-	CheckError(err)
+	io.CheckError(err)
 	totalDuration, err := ProbeDuration(InputProbeData)
-	CheckError(err)
+	io.CheckError(err)
 	return totalDuration
 }
 
@@ -74,10 +81,10 @@ func waitForFileReady(filePath string) bool {
 
 func ProcessQueue() {
 	for {
-		for file := range fileQueue {
+		for file := range store.FileQueue {
 			// if fileis in skip list, skip it
 			if !skipList[file.ID] {
-				go convertToDNxHR(file, *OutputDir)
+				go convertToDNxHR(file, *opts.OutputDir)
 			} else {
 				fmt.Printf("Skipping file: %s\n", file.FilePath)
 				delete(skipList, file.FilePath) // skipped files are removed from the skip list
@@ -102,15 +109,15 @@ type probeData struct {
 var InputProbeData = probeData{}
 
 // convertToDNxHR runs FFmpeg to convert the video to DNxHR
-func convertToDNxHR(inputFile File, outputDir string) {
-	for !*AutoConvert {
+func convertToDNxHR(inputFile types.File, outputDir string) {
+	for !*opts.AutoConvert {
 		time.Sleep(2 * time.Second)
 	}
 
 	conv <- 1
 	if !waitForFileReady(inputFile.FilePath) {
 		fmt.Printf("File %s is not ready to be processed\n", inputFile.ID)
-		fileQueue <- inputFile
+		store.FileQueue <- inputFile
 		<-conv
 		return
 	}
@@ -122,9 +129,9 @@ func convertToDNxHR(inputFile File, outputDir string) {
 	// probe input file
 	if len(InputProbeData.Streams) == 0 {
 		a, err := ffmpeg.Probe(inputFile.FilePath)
-		CheckError(err)
+		io.CheckError(err)
 		err = json.Unmarshal([]byte(a), &InputProbeData)
-		CheckError(err)
+		io.CheckError(err)
 	}
 
 	var inputHeight = 0
@@ -147,7 +154,7 @@ func convertToDNxHR(inputFile File, outputDir string) {
 	ffmpegArgs["profile:v"] = "dnxhr_hq"
 	ffmpegArgs["pix_fmt"] = "yuv420p"
 	ffmpegArgs["c:a"] = "pcm_s16le"
-	if *IgnoreExisting {
+	if *opts.IgnoreExisting {
 		ffmpegArgs["y"] = nil
 	}
 
@@ -160,7 +167,7 @@ func convertToDNxHR(inputFile File, outputDir string) {
 
 	convertWithProgress(inputFile.ID, inputFile.FilePath, outputPath, ffmpegArgs)
 	updateProgress(inputFile.ID, 100, true)
-	if *DeleteAfter {
+	if *opts.DeleteAfter {
 		_, err := os.Stat(inputFile.FilePath)
 		if err == nil {
 			os.Remove(inputFile.FilePath)
@@ -177,7 +184,7 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 
 	// get duration of video (3 seconds if preview mode)
 	totalDuration, err := ProbeDuration(InputProbeData)
-	CheckError(err)
+	io.CheckError(err)
 
 	fmt.Println("preparing conversion")
 
@@ -261,27 +268,27 @@ func TempSock(totalDuration float64, fileId string) string {
 }
 
 func updateProgress(fileId string, progress float32, mustSend bool) {
-	file, ok := fileList[fileId]
+	file, ok := store.FileList[fileId]
 	if !ok {
 		return
 	}
-	var completionStatus = Ternary(*DeleteAfter, string(CompleteDeleted), string(Completed))
+	var completionStatus = Ternary(*opts.DeleteAfter, string(types.CompleteDeleted), string(types.Completed))
 
-	FileListMutex.Lock()
-	fileList[fileId] = File{
+	store.FileListMutex.Lock()
+	store.FileList[fileId] = types.File{
 		ID:       fileId,
 		FilePath: file.FilePath,
-		Status:   FileStatus(Ternary(progress == 100, completionStatus, Ternary(progress == -1, string(Failed), string(Processing)))),
+		Status:   types.FileStatus(Ternary(progress == 100, completionStatus, Ternary(progress == -1, string(types.Failed), string(types.Processing)))),
 		Duration: file.Duration,
 		Progress: progress,
 	}
-	FileListMutex.Unlock()
+	store.FileListMutex.Unlock()
 
-	BroadcastMessage(Message{
-		MessageType: UpdateFile,
+	api.BroadcastMessage(types.Message{
+		MessageType: types.UpdateFile,
 		MustSend:    mustSend,
-		Data: map[string]File{
-			fileId: fileList[fileId],
+		Data: map[string]types.File{
+			fileId: store.FileList[fileId],
 		},
 	})
 }

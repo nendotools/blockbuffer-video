@@ -1,46 +1,48 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	// import internal package
-	i "blockbuffer/internal"
+	api "blockbuffer/internal/api"
+	fs "blockbuffer/internal/filesystem"
+	"blockbuffer/internal/io"
+	opts "blockbuffer/internal/settings"
 )
 
 func main() {
 	// Ensure output directory exists
-	if _, err := os.Stat(*i.OutputDir); os.IsNotExist(err) {
-		err := os.MkdirAll(*i.OutputDir, 0755)
+	if _, err := os.Stat(*opts.OutputDir); os.IsNotExist(err) {
+		err := os.MkdirAll(*opts.OutputDir, 0755)
 		if err != nil {
-			log.Fatalf("Failed to create output directory: %v", err)
+			io.SLogf("Failed to create output directory: %v", io.Fatal, err)
 		}
 	}
 
 	// Ensure upload directory exists
-	if _, err := os.Stat(*i.WatchDir); os.IsNotExist(err) {
-		err := os.MkdirAll(*i.WatchDir, 0755)
+	if _, err := os.Stat(*opts.WatchDir); os.IsNotExist(err) {
+		err := os.MkdirAll(*opts.WatchDir, 0755)
 		if err != nil {
-			log.Fatalf("Failed to create upload directory: %v", err)
+			io.SLogf("Failed to create upload directory: %v", io.Fatal, err)
 		}
 	}
 
-	if _, err := os.Stat(*i.UploadDir); os.IsNotExist(err) {
-		err := os.MkdirAll(*i.UploadDir, 0755)
+	if _, err := os.Stat(*opts.UploadDir); os.IsNotExist(err) {
+		err := os.MkdirAll(*opts.UploadDir, 0755)
 		if err != nil {
-			log.Fatalf("Failed to create upload directory: %v", err)
+			io.SLogf("Failed to create upload directory: %v", io.Fatal, err)
 		}
 	}
 
 	// Scan input directory and queue files for conversion
-	go i.ScanAndQueueFiles(*i.WatchDir, *i.OutputDir)
+	go fs.ScanAndQueueFiles(*opts.WatchDir, *opts.OutputDir)
 
 	// Start watching the directory
-	go i.WatchDirectory(*i.WatchDir, *i.OutputDir)
+	go fs.WatchDirectory(*opts.WatchDir, *opts.OutputDir)
 
 	// Check the queue and process files
-	go i.ProcessQueue()
+	go fs.ProcessQueue()
 
 	// Start the server
-	i.StartServer()
+	api.StartServer()
 }

@@ -1,4 +1,4 @@
-package internal
+package api
 
 import (
 	"encoding/json"
@@ -8,41 +8,44 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	appIO "blockbuffer/internal/io"
+	opts "blockbuffer/internal/settings"
 )
 
 func HandleUpload(w http.ResponseWriter, r *http.Request, deferMove bool) {
 	if r.Method != http.MethodPost {
-		ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
+		appIO.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		ErrorJSON(w, "Failed to get file", http.StatusBadRequest)
+		appIO.ErrorJSON(w, "Failed to get file", http.StatusBadRequest)
 		return
 	}
 
 	_, tempPath, err := writeFile(file, *header)
 	if err != nil {
-		ErrorJSON(w, "Failed to write file", http.StatusInternalServerError)
+		appIO.ErrorJSON(w, "Failed to write file", http.StatusInternalServerError)
 		return
 	}
 
 	if !deferMove {
-		moveFile(tempPath, filepath.Join(*WatchDir, header.Filename))
+		moveFile(tempPath, filepath.Join(*opts.WatchDir, header.Filename))
 	}
 	fmt.Fprintf(w, "File uploaded: %s\n", header.Filename)
 }
 
 func HandleUploadMultipleFiles(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
+		appIO.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	reader, err := r.MultipartReader()
 	if err != nil {
-		ErrorJSON(w, "Failed to get files", http.StatusBadRequest)
+		appIO.ErrorJSON(w, "Failed to get files", http.StatusBadRequest)
 		return
 	}
 
@@ -58,7 +61,7 @@ func HandleUploadMultipleFiles(w http.ResponseWriter, r *http.Request) {
 
 		_, tempPath, err := writeFile(part, *&multipart.FileHeader{Filename: part.FileName()})
 		if err != nil {
-			ErrorJSON(w, "Failed to write file", http.StatusInternalServerError)
+			appIO.ErrorJSON(w, "Failed to write file", http.StatusInternalServerError)
 			return
 		}
 		tempFiles = append(tempFiles, tempPath)
@@ -68,7 +71,7 @@ func HandleUploadMultipleFiles(w http.ResponseWriter, r *http.Request) {
 	for _, tempPath := range tempFiles {
 		filename := filepath.Base(tempPath)
 		filenames = append(filenames, filename)
-		moveFile(tempPath, filepath.Join(*WatchDir, filename))
+		moveFile(tempPath, filepath.Join(*opts.WatchDir, filename))
 	}
 
 	jsonData := json.NewEncoder(w)
@@ -77,7 +80,7 @@ func HandleUploadMultipleFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 func writeFile(reader io.Reader, header multipart.FileHeader) (*os.File, string, error) {
-	tempPath := filepath.Join(*UploadDir, header.Filename)
+	tempPath := filepath.Join(*opts.UploadDir, header.Filename)
 	tempFile, err := os.Create(tempPath)
 	if err != nil {
 		return nil, "", err
