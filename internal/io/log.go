@@ -39,7 +39,7 @@ func Log(msg string, severity ...LogLevel) {
 	}
 }
 
-func SLogf(msg string, severity LogLevel, args ...interface{}) {
+func Logf(msg string, severity LogLevel, args ...interface{}) {
 	s := fmt.Sprintf("[%s] %s\n", severity, msg)
 	fmt.Printf(s, args...)
 	if severity == Fatal {

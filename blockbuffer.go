@@ -15,7 +15,7 @@ func main() {
 	if _, err := os.Stat(*opts.OutputDir); os.IsNotExist(err) {
 		err := os.MkdirAll(*opts.OutputDir, 0755)
 		if err != nil {
-			io.SLogf("Failed to create output directory: %v", io.Fatal, err)
+			io.Logf("Failed to create output directory: %v", io.Fatal, err)
 		}
 	}
 
@@ -23,14 +23,14 @@ func main() {
 	if _, err := os.Stat(*opts.WatchDir); os.IsNotExist(err) {
 		err := os.MkdirAll(*opts.WatchDir, 0755)
 		if err != nil {
-			io.SLogf("Failed to create upload directory: %v", io.Fatal, err)
+			io.Logf("Failed to create upload directory: %v", io.Fatal, err)
 		}
 	}
 
 	if _, err := os.Stat(*opts.UploadDir); os.IsNotExist(err) {
 		err := os.MkdirAll(*opts.UploadDir, 0755)
 		if err != nil {
-			io.SLogf("Failed to create upload directory: %v", io.Fatal, err)
+			io.Logf("Failed to create upload directory: %v", io.Fatal, err)
 		}
 	}
 

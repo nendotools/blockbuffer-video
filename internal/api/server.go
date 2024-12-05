@@ -30,7 +30,7 @@ func isDevServer() bool {
 	// Get the executable path
 	execPath, err := os.Executable()
 	if err != nil {
-		io.SLogf("Failed to determine executable path: %v", io.Error, err)
+		io.Logf("Failed to determine executable path: %v", io.Error, err)
 	}
 
 	// Check if the path indicates a temporary binary (used by `go run`)
@@ -48,14 +48,14 @@ func startNuxtDev() {
 
 	io.Log("Starting Nuxt.js development server...")
 	if err := cmd.Start(); err != nil {
-		io.SLogf("Failed to start Nuxt.js: %v", io.Fatal, err)
+		io.Logf("Failed to start Nuxt.js: %v", io.Fatal, err)
 	}
 
 	// Wait for the process to exit or handle as a background process
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			io.SLogf("Nuxt.js process exited with error: %v", io.Fatal, err)
+			io.Logf("Nuxt.js process exited with error: %v", io.Fatal, err)
 		}
 	}()
 }
@@ -88,7 +88,7 @@ func StartServer() {
 	http.HandleFunc("/ws", HandleSocketConnections)
 
 	http.Handle("/api/", http.StripPrefix("/api", http.HandlerFunc(apiHandler)))
-	io.SLogf("Server listening on port: %s\n", io.Info, strconv.Itoa(*opts.Port))
+	io.Logf("Server listening on port: %s\n", io.Info, strconv.Itoa(*opts.Port))
 	io.Panicf(
 		http.ListenAndServe(*opts.ListenAddr+":"+strconv.Itoa(*opts.Port), nil),
 	)

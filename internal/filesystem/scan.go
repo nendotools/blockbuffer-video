@@ -3,8 +3,6 @@
 package filesystem
 
 import (
-	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,6 +11,7 @@ import (
 	"github.com/u2takey/go-utils/uuid"
 
 	api "blockbuffer/internal/api"
+	"blockbuffer/internal/io"
 	store "blockbuffer/internal/store"
 	types "blockbuffer/internal/types"
 )
@@ -29,7 +28,7 @@ func isVideoFile(filePath string) bool {
 func ScanAndQueueFiles(inputDir string, outputDir string) {
 	files, err := os.ReadDir(inputDir)
 	if err != nil {
-		log.Fatalf("Error reading directory: %v", err)
+		io.Logf("Error reading directory: %v", io.Error, err)
 	}
 
 	for _, file := range files {
@@ -50,10 +49,10 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 			store.UpdateFile(file)
 
 			if _, err := os.Stat(outputPath); os.IsNotExist(err) {
-				fmt.Printf("Queueing file for conversion: %s\n", inputFile)
+				io.Logf("Queueing file for conversion: %s\n", io.Info, inputFile)
 				store.FileQueue <- file
 			} else {
-				fmt.Printf("Output file already exists: %s\n", outputFile)
+				io.Logf("Output file already exists: %s\n", io.Info, outputFile)
 				file.Status = types.Completed
 				file.Progress = 100
 				store.UpdateFile(file)
@@ -66,16 +65,15 @@ func ScanAndQueueFiles(inputDir string, outputDir string) {
 func WatchDirectory(inputDir string, outputDir string) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatal(err)
+		io.Logf("Error creating watcher: %v", io.Fatal, err)
 	}
 	defer watcher.Close()
 
 	err = watcher.Add(inputDir)
 	if err != nil {
-		log.Fatal(err)
+		io.Logf("Error adding directory to watcher: %v", io.Fatal, err)
 	}
-
-	fmt.Printf("Watching directory: %s\n", inputDir)
+	io.Logf("Watching directory: %s\n", io.Info, inputDir)
 
 	// Watch for events in the directory
 	for {
@@ -85,7 +83,7 @@ func WatchDirectory(inputDir string, outputDir string) {
 			if event.Op.Has(fsnotify.Create) {
 				// When a new file is created, process it if it's a video file
 				if isVideoFile(event.Name) {
-					fmt.Printf("Detected new video: %s\n", event.Name)
+					io.Logf("Detected new video: %s\n", io.Info, event.Name)
 					var totalDuration = PollFile(event.Name)
 					file := types.File{
 						ID:       uuid.NewUUID(),
@@ -106,16 +104,16 @@ func WatchDirectory(inputDir string, outputDir string) {
 				}
 			}
 			if event.Op.Has(fsnotify.Rename) || event.Op.Has(fsnotify.Remove) {
-				fmt.Printf("Detected removed video: %s\n", event.Name)
+				io.Logf("Detected renamed/removed video: %s\n", io.Info, event.Name)
 				// add file to skip list
 				// search for the file path in the fileList.FilePath
 				for _, file := range store.FileList {
-					fmt.Println(file.FilePath == event.Name, " file: ", file)
 					if file.FilePath == event.Name {
-						fmt.Println("canceling conversion: ", file.ID)
+						io.Logf("canceling conversion: %s\n", io.Info, file.ID)
 						CancelConversion(file.ID)
 						skipList[file.ID] = true
 						if file.Status == types.CompleteDeleted {
+							io.Logf("Skipping UI notification: %s\n", io.Info, file.ID)
 							break
 						}
 						api.BroadcastMessage(types.Message{
@@ -128,7 +126,7 @@ func WatchDirectory(inputDir string, outputDir string) {
 				}
 			}
 		case err := <-watcher.Errors:
-			fmt.Println("Error:", err)
+			io.Logf("Error in watcher: %v", io.Error, err)
 		}
 	}
 }

@@ -3,8 +3,6 @@ package api
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -31,15 +29,16 @@ var outboundMessages = make(map[string]time.Time)
 func HandleSocketConnections(w http.ResponseWriter, r *http.Request) {
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("Failed to upgrade connection")
-		io.ErrorJSON(w, fmt.Sprintf("Failed to upgrade connection: %v", err), http.StatusInternalServerError)
+		var msg = "Failed to upgrade connection"
+		io.Log(msg, io.Error)
+		io.ErrorJSON(w, msg, http.StatusInternalServerError)
 		return
 	}
 
 	defer ws.Close()
 	clients[ws] = true
 	ws.WriteJSON(types.Message{MessageType: types.RefreshFiles, Data: store.FileList})
-	log.Println("Connected to server")
+	io.Log("new socket connection established", io.Info)
 	for {
 		var messages []types.File
 		err := ws.ReadJSON(&messages)
@@ -52,7 +51,10 @@ func HandleSocketConnections(w http.ResponseWriter, r *http.Request) {
 
 func HandleMessages() {
 	for {
+		// get next message
 		message := <-broadcast
+
+		// verify should send message
 		hash := hashMessage(message)
 		if message.MessageType != types.RefreshFiles && !message.MustSend {
 			if lastSent, exists := outboundMessages[hash]; exists && time.Since(lastSent) < pollingInterval {
@@ -60,6 +62,7 @@ func HandleMessages() {
 			}
 		}
 
+		// send message to all clients, close connection if error
 		outboundMessages[hash] = time.Now()
 		for client := range clients {
 			err := client.WriteJSON(message)
