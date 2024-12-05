@@ -96,6 +96,7 @@ func WatchDirectory(inputDir string, outputDir string) {
 					store.UpdateFile(file)
 					api.BroadcastMessage(types.Message{
 						MessageType: types.CreateFile,
+						MustSend:    true,
 						Data:        map[string]types.File{file.ID: file},
 					})
 
@@ -118,6 +119,7 @@ func WatchDirectory(inputDir string, outputDir string) {
 						}
 						api.BroadcastMessage(types.Message{
 							MessageType: types.DeleteFile,
+							MustSend:    true,
 							Data:        map[string]types.File{file.ID: file},
 						})
 						delete(store.FileList, file.ID)

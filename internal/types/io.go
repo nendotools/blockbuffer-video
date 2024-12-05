@@ -1,6 +1,7 @@
 package types
 
 import (
+	appIO "blockbuffer/internal/io"
 	"io"
 	"log"
 	"strings"
@@ -13,8 +14,7 @@ type FilterWriter struct {
 func (fw *FilterWriter) Write(p []byte) (n int, err error) {
 	s := strings.TrimSpace(string(p))
 	if !strings.Contains(s, "WARN  Deprecation") && s != "" {
-		var prefix = "[NUXT] "
-		return fw.Writer.Write([]byte(prefix + s + "\n"))
+		return fw.Writer.Write([]byte(appIO.NuxtPrefix + s + "\n"))
 	}
 	return len(p), nil
 }

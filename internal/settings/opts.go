@@ -1,7 +1,6 @@
 package settings
 
 import (
-	"blockbuffer/internal/io"
 	"fmt"
 	"os"
 	"time"
@@ -21,6 +20,7 @@ var Headless *bool
 var WatchDir *string  // WatchDir is the directory to watch for new files
 var OutputDir *string // OutputDir is the directory to output converted files
 var UploadDir *string // UploadDir is the directory to store files being uploaded by the user
+var LogLevel *string  // LogLevel is the log level to use
 
 /**
  * CONVERSION OPTIONS
@@ -57,6 +57,8 @@ func init() {
 	DeleteAfter = opts.Bool("delete-after", false, opts.Description("Delete source files after conversion"), opts.Alias("d"))
 	IgnoreExisting = opts.Bool("ignore-existing", false, opts.Description("Overwrite already converted files"), opts.Alias("i"))
 
+	LogLevel = opts.String("log-level", "info", opts.Description("Log level to use"), opts.Alias("L"))
+
 	opts.Parse(os.Args[1:])
 	if opts.Called("help") {
 		fmt.Fprintf(os.Stdout, opts.Help())
@@ -66,9 +68,4 @@ func init() {
 	if opts.Called("listen") == true && *ListenAddr == "127.0.0.1" {
 		*ListenAddr = "0.0.0.0"
 	}
-
-	io.Logf("Will listen on %s:%s", io.Info, *ListenAddr, *Port)
-	io.Logf("Watching: %s", io.Info, *WatchDir)
-	io.Logf("Outputting to: %s", io.Info, *OutputDir)
-	io.Logf("Uploading to: %s", io.Info, *UploadDir)
 }
