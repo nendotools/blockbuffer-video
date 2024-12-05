@@ -1,6 +1,7 @@
 package settings
 
 import (
+	"blockbuffer/internal/io"
 	"fmt"
 	"os"
 	"time"
@@ -66,8 +67,8 @@ func init() {
 		*ListenAddr = "0.0.0.0"
 	}
 
-	fmt.Println("Will listen on", *ListenAddr)
-	fmt.Println("watching", *WatchDir)
-	fmt.Println("outputting to", *OutputDir)
-	fmt.Println("uploading to", *UploadDir)
+	io.Logf("Will listen on %s:%s", io.Info, *ListenAddr, *Port)
+	io.Logf("Watching: %s", io.Info, *WatchDir)
+	io.Logf("Outputting to: %s", io.Info, *OutputDir)
+	io.Logf("Uploading to: %s", io.Info, *UploadDir)
 }

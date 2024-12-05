@@ -11,13 +11,10 @@ type FilterWriter struct {
 }
 
 func (fw *FilterWriter) Write(p []byte) (n int, err error) {
-	// get string from byte slice
-	// filter out nuxt.js logs
-	// write to writer
-	s := string(p)
-	if !strings.Contains(s, "WARN  Deprecation") {
+	s := strings.TrimSpace(string(p))
+	if !strings.Contains(s, "WARN  Deprecation") && s != "" {
 		var prefix = "[NUXT] "
-		return fw.Writer.Write([]byte(prefix + s))
+		return fw.Writer.Write([]byte(prefix + s + "\n"))
 	}
 	return len(p), nil
 }

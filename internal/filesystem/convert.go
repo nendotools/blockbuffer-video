@@ -63,7 +63,7 @@ func waitForFileReady(filePath string) bool {
 	for i := 0; i < maxChecks; i++ {
 		fileInfo, err := os.Stat(filePath)
 		if err != nil {
-			io.Logf("Error stating file %s: %v\n", io.Error, filePath, err)
+			io.Logf("Error stating file %s: %v", io.Error, filePath, err)
 			return false
 		}
 
@@ -86,7 +86,7 @@ func ProcessQueue() {
 			if !skipList[file.ID] {
 				go convertToDNxHR(file, *opts.OutputDir)
 			} else {
-				io.Logf("Skipping file: %s\n", io.Info, file.FilePath)
+				io.Logf("Skipping file: %s", io.Info, file.FilePath)
 				delete(skipList, file.FilePath) // skipped files are removed from the skip list
 			}
 		}
@@ -116,7 +116,7 @@ func convertToDNxHR(inputFile types.File, outputDir string) {
 
 	conv <- 1
 	if !waitForFileReady(inputFile.FilePath) {
-		io.Logf("File %s is not ready to be processed\n", io.Info, inputFile.ID)
+		io.Logf("File %s is not ready to be processed", io.Info, inputFile.ID)
 		store.FileQueue <- inputFile
 		<-conv
 		return
@@ -174,7 +174,7 @@ func convertToDNxHR(inputFile types.File, outputDir string) {
 		}
 	}
 
-	io.Logf("Successfully converted: %s -> %s\n", io.Info, inputFile.FilePath, outputPath)
+	io.Logf("Successfully converted: %s -> %s", io.Info, inputFile.FilePath, outputPath)
 	<-conv
 }
 
@@ -186,7 +186,7 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 	totalDuration, err := ProbeDuration(InputProbeData)
 	io.CheckError(err)
 
-	io.Logf("Processing file: %s\n", io.Info, inFileName)
+	io.Logf("Processing file: %s", io.Info, inFileName)
 	Cmd = ffmpeg.Input(inFileName).
 		Output(outFileName, ffmpegArgs).
 		GlobalArgs("-progress", "unix://"+TempSock(totalDuration, fileId)).
@@ -201,11 +201,11 @@ func convertWithProgress(fileId string, inFileName string, outFileName string, f
 
 	err = Cmd.Run()
 	if err != nil {
-		io.Logf("Error converting file: %s: %v\n", io.Error, inFileName, err)
+		io.Logf("Error converting file: %s: %v", io.Error, inFileName, err)
 	}
 
 	defer CancelConversion(fileId)
-	io.Logf("Successfully queued file: %s -> %s\n", io.Info, inFileName, outFileName)
+	io.Logf("Successfully queued file: %s -> %s", io.Info, inFileName, outFileName)
 }
 
 func ProbeDuration(data probeData) (float64, error) {
@@ -229,7 +229,7 @@ func TempSock(totalDuration float64, fileId string) string {
 		re := regexp.MustCompile(`out_time_ms=(\d+)`)
 		fd, err := l.Accept()
 		if err != nil {
-			io.Logf("Error accepting connection: %v\n", io.Fatal, err)
+			io.Logf("Error accepting connection: %v", io.Fatal, err)
 		}
 		buf := make([]byte, 16)
 		data := ""
@@ -291,12 +291,12 @@ func updateProgress(fileId string, progress float32, mustSend bool) {
 
 func CancelConversion(fileId string) {
 	if conv, ok := ConversionMap[fileId]; ok {
-		io.Logf("Cancelling conversion: %s\n", io.Info, fileId)
+		io.Logf("Cancelling conversion: %s", io.Info, fileId)
 		if err := conv.cmd.Process.Signal(os.Interrupt); err == nil {
 			if _, err := os.Stat(conv.outFile); !os.IsNotExist(err) {
-				io.Logf("Removing incomplete file: %s\n", io.Info, conv.outFile)
+				io.Logf("Removing incomplete file: %s", io.Info, conv.outFile)
 				if err := os.Remove(conv.outFile); err != nil {
-					io.Logf("Error deleting file: %v\n", io.Error, err)
+					io.Logf("Error deleting file: %v", io.Error, err)
 				}
 			}
 		}

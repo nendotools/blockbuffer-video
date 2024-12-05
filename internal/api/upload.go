@@ -34,7 +34,7 @@ func HandleUpload(w http.ResponseWriter, r *http.Request, deferMove bool) {
 	if !deferMove {
 		moveFile(tempPath, filepath.Join(*opts.WatchDir, header.Filename))
 	}
-	fmt.Fprintf(w, "File uploaded: %s\n", header.Filename)
+	fmt.Fprintf(w, "File uploaded: %s", header.Filename)
 }
 
 func HandleUploadMultipleFiles(w http.ResponseWriter, r *http.Request) {
