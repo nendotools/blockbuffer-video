@@ -13,9 +13,14 @@ type FilterWriter struct {
 
 func (fw *FilterWriter) Write(p []byte) (n int, err error) {
 	s := strings.TrimSpace(string(p))
+	if strings.Contains(s, "ERROR  [uncaughtException] write EPIPE") {
+		// Ignore the error message from Nuxt.js
+		return 0, nil
+	}
 	if !strings.Contains(s, "WARN  Deprecation") && s != "" {
 		return fw.Writer.Write([]byte(appIO.NuxtPrefix + s + "\n"))
 	}
+
 	return len(p), nil
 }
 

@@ -40,7 +40,7 @@ func isDevServer() bool {
 
 func startNuxtDev() {
 	cmd := exec.Command("yarn", "dev")
-	cmd.Dir = "./blockbuffer-fe"
+	cmd.Dir = "./client"
 
 	// listen to stdout and stderr and pass to stdout with prefix "NUXT: "
 	cmd.Stdout = types.Writer()
@@ -52,7 +52,7 @@ func startNuxtDev() {
 	}
 
 	// Wait for the process to exit or handle as a background process
-	go func() {
+	func() {
 		err := cmd.Wait()
 		if err != nil {
 			io.Logf("Nuxt.js process exited with error: %v", io.Fatal, err)
@@ -76,7 +76,7 @@ func StartServer() {
 	}
 
 	if isDevServer() {
-		startNuxtDev()
+		go startNuxtDev()
 		http.HandleFunc("/", proxyToNuxtDev)
 	} else {
 		fs := http.FileServer(http.Dir("public"))
