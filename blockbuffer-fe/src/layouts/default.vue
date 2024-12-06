@@ -40,7 +40,7 @@ import Button from '@/components/ui/Button.vue';
 
 .header {
   height: min-content;
-  padding-bottom: 0;
+  padding: 0 var(--spacing-xxl);
   background-color: var(--color-background-primary) !important;
 
   .logo {

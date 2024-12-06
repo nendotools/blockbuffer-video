@@ -88,7 +88,7 @@ func StartServer() {
 	http.HandleFunc("/ws", HandleSocketConnections)
 
 	http.Handle("/api/", http.StripPrefix("/api", http.HandlerFunc(apiHandler)))
-	io.Logf("Server listening on port: %s", io.Info, strconv.Itoa(*opts.Port))
+	io.Logf("Server listening on -> %s:%s", io.Info, *opts.ListenAddr, strconv.Itoa(*opts.Port))
 	io.Panicf(
 		http.ListenAndServe(*opts.ListenAddr+":"+strconv.Itoa(*opts.Port), nil),
 	)
