@@ -104,6 +104,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	router.HandleFunc("POST /config", configHandler)
 	router.HandleFunc("GET /files", filesHandler)
 	router.HandleFunc("POST /upload", HandleUploadMultipleFiles)
+	router.HandleFunc("GET /codec", HandleCodec)
 	router.ServeHTTP(w, r)
 }
 
