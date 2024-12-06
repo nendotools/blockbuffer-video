@@ -48,7 +48,7 @@ func PollFile(inputFile string) float64 {
 
 var ConversionMap = make(map[string]Conversion)
 
-func Ternary(condition bool, a string, b string) string {
+func Ternary(condition bool, a any, b any) any {
 	if condition {
 		return a
 	}
@@ -125,6 +125,13 @@ func convertToDNxHR(inputFile types.File, outputDir string) {
 	// Prepare paths
 	outputFile := strings.TrimSuffix(filepath.Base(inputFile.FilePath), filepath.Ext(inputFile.FilePath)) + "_dnxhr.mov"
 	outputPath := filepath.Join(outputDir, outputFile)
+	// if file exists and not overwriting, skip conversion
+	if _, err := os.Stat(outputPath); err == nil && !*opts.OverwriteExisting {
+		io.Logf("Skipping existing file: %s", io.Info, outputFile)
+		updateProgress(inputFile.ID, -10, true)
+		<-conv
+		return
+	}
 
 	// probe input file
 	if len(InputProbeData.Streams) == 0 {
@@ -154,9 +161,6 @@ func convertToDNxHR(inputFile types.File, outputDir string) {
 	ffmpegArgs["profile:v"] = "dnxhr_hq"
 	ffmpegArgs["pix_fmt"] = "yuv420p"
 	ffmpegArgs["c:a"] = "pcm_s16le"
-	if *opts.IgnoreExisting {
-		ffmpegArgs["y"] = nil
-	}
 
 	// set resolution
 	if inputWidth > inputHeight && inputHeight > 1080 {
@@ -268,13 +272,27 @@ func updateProgress(fileId string, progress float32, mustSend bool) {
 	if !ok {
 		return
 	}
-	var completionStatus = Ternary(*opts.DeleteAfter, string(types.CompleteDeleted), string(types.Completed))
+	status := file.Status
+	switch progress {
+	case -10:
+		status = types.Rejected
+		break
+	case -1:
+		status = types.Failed
+		break
+	case 100:
+		status = Ternary(*opts.DeleteAfter, types.CompleteDeleted, types.Completed).(types.FileStatus)
+		break
+	default:
+		status = types.Processing
+		break
+	}
 
 	store.FileListMutex.Lock()
 	store.FileList[fileId] = types.File{
 		ID:       fileId,
 		FilePath: file.FilePath,
-		Status:   types.FileStatus(Ternary(progress == 100, completionStatus, Ternary(progress == -1, string(types.Failed), string(types.Processing)))),
+		Status:   status,
 		Duration: file.Duration,
 		Progress: progress,
 	}

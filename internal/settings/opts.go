@@ -25,11 +25,11 @@ var LogLevel *string  // LogLevel is the log level to use
 /**
  * CONVERSION OPTIONS
  **/
-var blockAuto chan bool  // blockAuto is a channel to block automatic conversion
-var MaxConcurrent *int   // max number of concurrent conversions
-var AutoConvert *bool    // true to automatically convert files in the watch directory
-var DeleteAfter *bool    // true to delete source files after conversion
-var IgnoreExisting *bool // true to overwrite already converted files
+var blockAuto chan bool     // blockAuto is a channel to block automatic conversion
+var MaxConcurrent *int      // max number of concurrent conversions
+var AutoConvert *bool       // true to automatically convert files in the watch directory
+var DeleteAfter *bool       // true to delete source files after conversion
+var OverwriteExisting *bool // true to overwrite already converted files
 
 /**
 *  FILE QUEUE OPTIONS
@@ -55,7 +55,7 @@ func init() {
 
 	AutoConvert = opts.Bool("auto-convert", true, opts.Description("Automatically convert files in the watch directory"), opts.Alias("a"))
 	DeleteAfter = opts.Bool("delete-after", false, opts.Description("Delete source files after conversion"), opts.Alias("d"))
-	IgnoreExisting = opts.Bool("ignore-existing", false, opts.Description("Overwrite already converted files"), opts.Alias("i"))
+	OverwriteExisting = opts.Bool("overwrite-existing", false, opts.Description("Overwrite already converted files"), opts.Alias("O"))
 
 	LogLevel = opts.String("log-level", "info", opts.Description("Log level to use"), opts.Alias("L"))
 

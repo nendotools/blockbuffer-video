@@ -9,6 +9,7 @@ const (
 	Completed       FileStatus = "completed"
 	CompleteDeleted FileStatus = "completed-deleted"
 	Cancelled       FileStatus = "cancelled"
+	Rejected        FileStatus = "rejected"
 	Failed          FileStatus = "failed"
 	Deleted         FileStatus = "deleted"
 )

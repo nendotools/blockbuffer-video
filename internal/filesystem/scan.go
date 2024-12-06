@@ -73,7 +73,6 @@ func WatchDirectory(inputDir string, outputDir string) {
 	if err != nil {
 		io.Logf("Error adding directory to watcher: %v", io.Fatal, err)
 	}
-	io.Logf("Watching directory: %s", io.Info, inputDir)
 
 	// Watch for events in the directory
 	for {

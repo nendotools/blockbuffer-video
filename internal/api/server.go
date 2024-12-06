@@ -21,9 +21,9 @@ import (
 )
 
 type Config struct {
-	AutoConvert    *bool `json:"autoConvert,omitempty"`
-	DeleteAfter    *bool `json:"deleteAfter,omitempty"`
-	IgnoreExisting *bool `json:"ignoreExisting,omitempty"`
+	AutoConvert       *bool `json:"autoConvert,omitempty"`
+	DeleteAfter       *bool `json:"deleteAfter,omitempty"`
+	OverwriteExisting *bool `json:"overwriteExisting,omitempty"`
 }
 
 func isDevServer() bool {
@@ -112,7 +112,7 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 		io.SuccessJSON(w, map[string]interface{}{
 			"autoConvert":    opts.AutoConvert,
 			"deleteAfter":    opts.DeleteAfter,
-			"ignoreExisting": opts.IgnoreExisting,
+			"ignoreExisting": opts.OverwriteExisting,
 		})
 	}
 
@@ -129,8 +129,8 @@ func configHandler(w http.ResponseWriter, r *http.Request) {
 		if config.DeleteAfter != nil {
 			opts.DeleteAfter = config.DeleteAfter
 		}
-		if config.IgnoreExisting != nil {
-			opts.IgnoreExisting = config.IgnoreExisting
+		if config.OverwriteExisting != nil {
+			opts.OverwriteExisting = config.OverwriteExisting
 		}
 		io.SuccessJSON(w, "success")
 	}

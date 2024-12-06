@@ -1,14 +1,16 @@
 <template>
   <div class="item">
     <div class="icon-space">
-      <Icon :name="icon" class="main-icon" :class="{ tinted: completed }" />
-      <Icon v-if="completed" name="check" class="icon-overlap" />
+      <Icon :name="icon" class="main-icon" :class="{ tinted: completed || warning || error }" />
+      <Icon v-if="completed" name="check" class="icon-overlap completed" />
+      <Icon v-if="warning" name="alert-triangle" class="icon-overlap warning" />
+      <Icon v-if="error" name="alert-octagon" class="icon-overlap error" />
     </div>
     <div class="item-data">
       <div class="data">
         <h4>{{ name }}</h4>
         <div class="details">1 file: {{ timecode }} total runtime</div>
-        <div class="status">Status: {{ file.status }}</div>
+        <div class="status">Status: <span :class="{ completed, warning, error }">{{ file.status }}</span></div>
       </div>
     </div>
     <ProgressBar :value="file.progress / 100" smooth-transition />
@@ -19,7 +21,7 @@
 import { watch, computed, onMounted, ref } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
 import ProgressBar from '@/components/ui/ProgressBar.vue';
-import { type File } from '@/types/files';
+import { FileStatuses, type File } from '@/types/files';
 
 const props = defineProps<{
   file: File;
@@ -28,6 +30,8 @@ const props = defineProps<{
 
 const icon = props.fileType === 'video' ? 'film' : 'folder';
 const completed = ref(false);
+const warning = ref(false);
+const error = ref(false);
 
 const name = computed(() => props.file.filePath.split('/').pop());
 const timecode = computed(() =>
@@ -35,17 +39,31 @@ const timecode = computed(() =>
   new Date(1000 * props.file.duration).toISOString().substring(11, 19),
 );
 onMounted(() => {
-  if (props.file.progress === 100) {
-    completed.value = true;
-  }
+  statusDisplay(props.file.status);
 });
 
-watch(() => props.file.progress, async (progress) => {
-  if (progress === 100) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    completed.value = true;
-  }
+watch(() => props.file.status, async (status) => {
+  await new Promise((resolve) => setTimeout(resolve, 500));
+  statusDisplay(status);
 });
+
+const statusDisplay = (status: FileStatuses) => {
+  console.log(status);
+
+  completed.value = false;
+  warning.value = false;
+  error.value = false;
+  switch (status) {
+    case FileStatuses.COMPLETED:
+      completed.value = true;
+      break;
+    case FileStatuses.REJECTED:
+      warning.value = true;
+      break;
+    case FileStatuses.FAILED:
+      error.value = true;
+  }
+};
 </script>
 
 <style scoped lang="scss">
@@ -75,7 +93,6 @@ watch(() => props.file.progress, async (progress) => {
       width: 0;
       bottom: -5%;
       right: 50%;
-      color: var(--success-color);
       border-radius: 50%;
     }
   }
@@ -120,5 +137,17 @@ watch(() => props.file.progress, async (progress) => {
   padding: 0;
   background: linear-gradient(5deg, var(--color-background-primary-dark), var(--color-background-secondary-dark));
   border: none;
+}
+
+.completed {
+  color: var(--success-color);
+}
+
+.warning {
+  color: var(--warning-color);
+}
+
+.error {
+  color: var(--error-color);
 }
 </style>

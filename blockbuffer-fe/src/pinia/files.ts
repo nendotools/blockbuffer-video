@@ -20,9 +20,8 @@ export const useFilesStore = defineStore("files", {
       this.ws = await useWebSocket("/ws", this.updateFiles);
     },
     async fetchFiles() {
-      console.log("fetchFiles");
       const data = await getFiles();
-      this.files = data;
+      this.files = data.sort((a, b) => a.filePath.localeCompare(b.filePath));
     },
     async uploadFiles(files: File[]) {
       const loader = useLoaderStore();
@@ -53,6 +52,7 @@ export const useFilesStore = defineStore("files", {
             }
           });
       }
+      this.files.sort((a, b) => a.filePath.localeCompare(b.filePath));
     }
   },
 });

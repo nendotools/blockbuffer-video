@@ -5,7 +5,7 @@ interface State {
   windowWidth: number;
   autoConvert: boolean;
   deleteAfterConvert: boolean;
-  ignoreExisting: boolean;
+  overwriteExisting: boolean;
 }
 
 export const useGlobalStore = defineStore("global", {
@@ -13,7 +13,7 @@ export const useGlobalStore = defineStore("global", {
     windowWidth: window.innerWidth,
     autoConvert: true,
     deleteAfterConvert: false,
-    ignoreExisting: false,
+    overwriteExisting: false,
   }),
 
   getters: {
@@ -28,7 +28,7 @@ export const useGlobalStore = defineStore("global", {
       const config = await getConfig();
       this.autoConvert = config.autoConvert;
       this.deleteAfterConvert = config.deleteAfter;
-      this.ignoreExisting = config.ignoreExisting;
+      this.overwriteExisting = config.overwriteExisting;
     },
     async toggleAutoConvert() {
       this.autoConvert = !this.autoConvert;
@@ -39,8 +39,8 @@ export const useGlobalStore = defineStore("global", {
       await updateConfig({ deleteAfter: this.deleteAfterConvert });
     },
     async toggleIgnoreExisting() {
-      this.ignoreExisting = !this.ignoreExisting;
-      await updateConfig({ ignoreExisting: this.ignoreExisting });
+      this.overwriteExisting = !this.overwriteExisting;
+      await updateConfig({ overwriteExisting: this.overwriteExisting });
     }
   }
 });

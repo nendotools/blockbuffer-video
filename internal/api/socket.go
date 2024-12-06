@@ -69,6 +69,7 @@ func HandleMessages() {
 			if err != nil {
 				client.Close()
 				delete(clients, client)
+				io.Log("socket connection closed", io.Info)
 			}
 		}
 	}

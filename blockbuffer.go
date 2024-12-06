@@ -11,7 +11,6 @@ import (
 )
 
 func main() {
-	io.Logf("Will listen on %s:%v", io.Info, *opts.ListenAddr, *opts.Port)
 	io.Logf("Watching: %s", io.Info, *opts.WatchDir)
 	io.Logf("Outputting to: %s", io.Info, *opts.OutputDir)
 	io.Logf("Uploading to: %s", io.Info, *opts.UploadDir)

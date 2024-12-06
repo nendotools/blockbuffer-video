@@ -7,7 +7,7 @@
         <Checkbox :checked="globalStore.autoConvert" label="Auto-convert" @toggle="globalStore.toggleAutoConvert" />
         <Checkbox :checked="globalStore.deleteAfterConvert" label="Delete after convert"
           @toggle="globalStore.toggleDeleteAfterConvert" />
-        <Checkbox :checked="globalStore.ignoreExisting" label="Ignore existing files"
+        <Checkbox :checked="globalStore.overwriteExisting" label="Overwrite existing files"
           @toggle="globalStore.toggleIgnoreExisting" />
       </div>
     </div>
