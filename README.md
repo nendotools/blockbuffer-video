@@ -17,10 +17,10 @@ The core functionality of the application is to convert videos to a variety of f
   - [ ] Transcoding profiles
   - [ ] Output directories
 - [ ] Web interface
-  - [ ] Global settings
+  - [x] Global settings
   - [x] Video upload
   - [ ] Video download
-  - [ ] Video conversion status
+  - [x] Video conversion status
   - [ ] Configuration options
   - [ ] Transcoding profiles
   - [ ] Multi-output rules
@@ -52,7 +52,7 @@ cd blockbuffer
 
 go mod download
 
-yarn --cwd ./blockbuffer-fe install
+yarn --cwd ./client install
 ```
 
 ## Development Server
@@ -69,7 +69,7 @@ This will start the Go server and run Nuxt3 in a development mode, allowing for 
 
 Build the frontend for production as a static site:
 ```bash
-yarn --cwd ./blockbuffer-fe generate 
+yarn --cwd ./client generate 
 ```
 
 Build the Go server for production:
@@ -77,4 +77,4 @@ Build the Go server for production:
 go build .
 ```
 
-you should now have a `blockbuffer` binary in the project directory. Run it to start the server.
+There should now be a `blockbuffer` binary in the project directory. Run it to start the server.
