@@ -157,10 +157,17 @@ func convertToDNxHR(inputFile types.File, outputDir string) {
 
 	// create ffmpeg args
 	ffmpegArgs := ffmpeg.KwArgs{}
-	ffmpegArgs["c:v"] = "dnxhd"
-	ffmpegArgs["profile:v"] = "dnxhr_hq"
-	ffmpegArgs["pix_fmt"] = "yuv420p"
-	ffmpegArgs["c:a"] = "pcm_s16le"
+	// convert EncoderProfile to ffmpeg.KwArgs
+	var profile = types.DefaultEncoder
+	ffmpegArgs["c:v"] = profile.Name
+	ffmpegArgs["pix_fmt"] = profile.Format
+	ffmpegArgs["c:a"] = profile.AudioEncoder.Name
+	for _, option := range profile.Options {
+		ffmpegArgs[option.Name+":v"] = option.Value
+	}
+	for _, option := range profile.AudioEncoder.Options {
+		ffmpegArgs[option.Name+":a"] = option.Value
+	}
 
 	// set resolution
 	if inputWidth > inputHeight && inputHeight > 1080 {

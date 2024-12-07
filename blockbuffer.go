@@ -47,6 +47,9 @@ func main() {
 	// Check the queue and process files
 	go fs.ProcessQueue()
 
+	// preprocess codecs
+	go api.InitializeCodecs()
+
 	// Start the server
 	api.StartServer()
 }
