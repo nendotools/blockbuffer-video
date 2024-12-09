@@ -14,7 +14,7 @@ import (
 
 var Cmd *exec.Cmd
 
-func HandleCodec(w http.ResponseWriter, r *http.Request) {
+func HandleEncoder(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		io.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -22,7 +22,21 @@ func HandleCodec(w http.ResponseWriter, r *http.Request) {
 
 	// If Encoders is not nil, send the JSON response
 	if types.Encoders != nil {
-		io.SuccessJSON(w, types.Encoders)
+		VideoEncoders := []types.Encoder{}
+		AudioEncoders := []types.Encoder{}
+		for _, encoder := range types.Encoders {
+			if encoder.Type == types.Video {
+				VideoEncoders = append(VideoEncoders, encoder)
+			}
+			if encoder.Type == types.Audio {
+				AudioEncoders = append(AudioEncoders, encoder)
+			}
+		}
+		io.SuccessJSON(w, map[string]interface{}{
+			"defaultEncoder": types.DefaultEncoder,
+			"videoEncoders":  VideoEncoders,
+			"audioEncoders":  AudioEncoders,
+		})
 		return
 	}
 

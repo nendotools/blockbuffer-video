@@ -10,6 +10,15 @@
         <Checkbox :checked="globalStore.overwriteExisting" label="Overwrite existing files"
           @toggle="globalStore.toggleIgnoreExisting" />
       </div>
+
+      <h4>Encoder Settings</h4>
+
+      <div class="opt-group">
+        <div>Video Codec: {{ encoder?.name }}</div>
+        <sub>Format: {{ encoder?.format }}</sub>
+        <div>Audio Codec: {{ encoder?.audioEncoder?.name }}</div>
+        <EncoderMenu @save-encoder="fileStore.selectEncoder" />
+      </div>
     </div>
     <div class="file-list">
       <ListFile v-for="file in files" :key="file.id" fileType="video" :file="file" />
@@ -25,12 +34,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from '#imports';
+import { computed, onMounted, storeToRefs } from '#imports';
 import Icon from '@/components/ui/Icon.vue';
 import Button from '@/components/ui/Button.vue';
-import Checkbox from '~/components/forms/Checkbox.vue';
+import Checkbox from '@/components/forms/Checkbox.vue';
 import ListFile from '@/components/elements/ListFile.vue';
-import { storeToRefs } from 'pinia';
 import { useGlobalStore } from '@/pinia/global';
 import { MEDIA_UPLOAD_KEY, useFilesStore } from '@/pinia/files';
 import { useLoaderStore } from '~/pinia/loader';
@@ -39,13 +47,14 @@ const fileStore = useFilesStore();
 const loaderStore = useLoaderStore();
 const globalStore = useGlobalStore();
 const { isMobile } = storeToRefs(globalStore);
-const { files } = storeToRefs(fileStore);
+const { encoder, files } = storeToRefs(fileStore);
 
 const uploading = computed(() => loaderStore.isLoading(MEDIA_UPLOAD_KEY));
 
 onMounted(async () => {
   globalStore.fetchSettings();
   await fileStore.initSocket();
+  await fileStore.fetchEncoders();
 });
 
 const selectFiles = (event: Event) => {
@@ -70,9 +79,11 @@ const selectFiles = (event: Event) => {
   height: 100%;
   display: flex;
   flex-direction: row;
+  overflow: hidden;
 }
 
 .menu {
+  overflow-x: hidden;
   min-width: 300px;
   display: flex;
   flex-direction: column;
@@ -96,6 +107,10 @@ const selectFiles = (event: Event) => {
 }
 
 .opt-group {
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 300px;
+  padding: var(--spacing-sm);
   margin-top: var(--spacing-lg);
   display: flex;
   flex-direction: column;

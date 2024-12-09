@@ -8,45 +8,45 @@ const (
 )
 
 type AVOptionEnum struct {
-	Option      string
-	ID          string
-	Description string
+	Option      string `json:"option"`
+	ID          string `json:"id"`
+	Description string `json:"description"`
 }
 
 type AVOption struct {
-	Name        string
-	Description string
-	Type        string         // bool, int, enum
-	Options     []AVOptionEnum // empty unless enum
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Type        string         `json:"type"`    // bool, int, enum
+	Options     []AVOptionEnum `json:"options"` // empty unless enum
 }
 
 type Encoder struct {
-	Type        EncoderType
-	Name        string
-	Description string
-	Formats     []string
-	SampleRates []string // audio sample
-	Options     []AVOption
+	Type        EncoderType `json:"type"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Formats     []string    `json:"formats"`
+	SampleRates []string    `json:"sampleRates"` // empty unless audio
+	Options     []AVOption  `json:"options"`
 }
 
 var Encoders []Encoder
 
 type AVOptionProfile struct {
-	Name  string
-	Value string
+	Name  string `json:"name"`
+	Value string `json:"value"`
 }
 
 type AudioEncoderProfile struct {
-	Name       string
-	SampleRate string
-	Options    []AVOptionProfile
+	Name       string            `json:"name"`
+	SampleRate string            `json:"sampleRate"`
+	Options    []AVOptionProfile `json:"options"`
 }
 
 type EncoderProfile struct {
-	Name         string
-	Format       string
-	Options      []AVOptionProfile
-	AudioEncoder AudioEncoderProfile
+	Name         string              `json:"name"`
+	Format       string              `json:"format"`
+	Options      []AVOptionProfile   `json:"options"`
+	AudioEncoder AudioEncoderProfile `json:"audioEncoder"`
 }
 
 var DefaultEncoder EncoderProfile
