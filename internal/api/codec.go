@@ -14,6 +14,48 @@ import (
 
 var Cmd *exec.Cmd
 
+// return all presets
+func GetPresets(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		io.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Printf("types.Presets: %v\n", types.Presets)
+	for _, preset := range types.Presets {
+		fmt.Printf("preset: %v\n", preset)
+	}
+	io.SuccessJSON(w, types.Presets)
+}
+
+// add preset to list
+func AddPreset(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		io.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+}
+
+// remove preset from list
+func RemovePreset(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		io.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+}
+
+// assign preset to file task
+func AssignPreset(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		io.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+}
+
 func HandleEncoder(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		io.ErrorJSON(w, "Method not allowed", http.StatusMethodNotAllowed)

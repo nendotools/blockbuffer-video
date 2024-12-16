@@ -1,0 +1,36 @@
+{
+  "presets": [
+    {
+      "name": "DNxHR",
+      "description": "low compression video codec for editing",
+      "extension": "mov",
+      "video": {
+        "codec": "dnxhd",
+        "format": "yuv422p",
+        "options": {
+          "profile": "dnxhr_hq"
+        }
+      },
+      "audio": {
+        "codec": "pcm_s16le",
+        "samepleRate": 48000,
+        "options": null
+      }
+    },
+    {
+      "name": "MP4",
+      "description": "MP4 container with H.264 video and AAC audio",
+      "extension": "mp4",
+      "video": {
+        "codec": "h264_nvenc",
+        "format": "yuv420p",
+        "options": null
+      },
+      "audio": {
+        "codec": "aac",
+        "samepleRate": 44100,
+        "options": null
+      }
+    }
+  ]
+}

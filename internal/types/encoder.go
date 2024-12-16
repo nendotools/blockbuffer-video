@@ -31,7 +31,7 @@ type Encoder struct {
 
 var Encoders []Encoder
 
-type AVOptionProfile struct {
+type AVProfileOption struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
@@ -39,33 +39,29 @@ type AVOptionProfile struct {
 type AudioEncoderProfile struct {
 	Name       string            `json:"name"`
 	SampleRate string            `json:"sampleRate"`
-	Options    []AVOptionProfile `json:"options"`
+	Options    []AVProfileOption `json:"options"`
 }
 
 type EncoderProfile struct {
 	Name         string              `json:"name"`
 	Format       string              `json:"format"`
-	Options      []AVOptionProfile   `json:"options"`
-	AudioEncoder AudioEncoderProfile `json:"audioEncoder"`
+	Options      []AVProfileOption   `json:"options"`
+	AudioEncoder AudioEncoderProfile `json:"audio"`
 }
 
 var DefaultEncoder EncoderProfile
 
 func init() {
-	var videoOptions = []AVOptionProfile{}
-	videoOptions = append(videoOptions, AVOptionProfile{
-		Name:  "profile",
-		Value: "dnxhr_hq",
-	})
-
 	DefaultEncoder = EncoderProfile{
-		Name:    "dnxhd",
-		Format:  "yuv420p",
-		Options: videoOptions,
+		Name:   "dnxhd",
+		Format: "yuv420p",
+		Options: []AVProfileOption{
+			{Name: "profile", Value: "dnxhr"},
+		},
 		AudioEncoder: AudioEncoderProfile{
 			Name:       "pcm_s16le",
 			SampleRate: "48000",
-			Options:    []AVOptionProfile{},
+			Options:    []AVProfileOption{},
 		},
 	}
 }

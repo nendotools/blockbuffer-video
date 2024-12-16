@@ -158,15 +158,19 @@ func convertToDNxHR(inputFile types.File, outputDir string) {
 	// create ffmpeg args
 	ffmpegArgs := ffmpeg.KwArgs{}
 	// convert EncoderProfile to ffmpeg.KwArgs
-	var profile = types.DefaultEncoder
-	ffmpegArgs["c:v"] = profile.Name
-	ffmpegArgs["pix_fmt"] = profile.Format
-	ffmpegArgs["c:a"] = profile.AudioEncoder.Name
-	for _, option := range profile.Options {
-		ffmpegArgs[option.Name+":v"] = option.Value
+	var profile = types.DefaultPreset
+	ffmpegArgs["c:v"] = profile.VideoPreset.Codec
+	ffmpegArgs["pix_fmt"] = profile.VideoPreset.Format
+	ffmpegArgs["c:a"] = profile.AudioPreset.Codec
+	if profile.VideoPreset.Options != nil {
+		for _, opt := range *profile.VideoPreset.Options {
+			ffmpegArgs[opt.Name] = opt.Value
+		}
 	}
-	for _, option := range profile.AudioEncoder.Options {
-		ffmpegArgs[option.Name+":a"] = option.Value
+	if profile.AudioPreset.Options != nil {
+		for _, opt := range *profile.AudioPreset.Options {
+			ffmpegArgs[opt.Name] = opt.Value
+		}
 	}
 
 	// set resolution
@@ -175,6 +179,8 @@ func convertToDNxHR(inputFile types.File, outputDir string) {
 	} else if inputHeight >= inputWidth && inputWidth > 1080 {
 		ffmpegArgs["vf"] = "scale=1080:-2"
 	}
+
+	io.Logf("ffmpeg args: %v", io.Info, ffmpegArgs)
 
 	convertWithProgress(inputFile.ID, inputFile.FilePath, outputPath, ffmpegArgs)
 	updateProgress(inputFile.ID, 100, true)

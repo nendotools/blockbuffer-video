@@ -105,6 +105,10 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	router.HandleFunc("GET /files", filesHandler)
 	router.HandleFunc("POST /upload", HandleUploadMultipleFiles)
 	router.HandleFunc("GET /encoders", HandleEncoder)
+	router.HandleFunc("GET /presets", GetPresets)
+	router.HandleFunc("POST /presets", AddPreset)
+	router.HandleFunc("PATCH /presets", AssignPreset)
+	router.HandleFunc("DELETE /presets", RemovePreset)
 	router.ServeHTTP(w, r)
 }
 

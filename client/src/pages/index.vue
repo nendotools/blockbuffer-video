@@ -42,10 +42,12 @@ import ListFile from '@/components/elements/ListFile.vue';
 import { useGlobalStore } from '@/pinia/global';
 import { MEDIA_UPLOAD_KEY, useFilesStore } from '@/pinia/files';
 import { useLoaderStore } from '~/pinia/loader';
+import { usePresetStore } from '~/pinia/preset';
 
 const fileStore = useFilesStore();
 const loaderStore = useLoaderStore();
 const globalStore = useGlobalStore();
+const presetStore = usePresetStore();
 const { isMobile } = storeToRefs(globalStore);
 const { encoder, files } = storeToRefs(fileStore);
 
@@ -55,6 +57,7 @@ onMounted(async () => {
   globalStore.fetchSettings();
   await fileStore.initSocket();
   await fileStore.fetchEncoders();
+  await presetStore.fetchPresets();
 });
 
 const selectFiles = (event: Event) => {

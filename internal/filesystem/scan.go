@@ -17,6 +17,8 @@ import (
 )
 
 var skipList = make(map[string]bool)
+var PresetBindings = make(map[string]string)
+var GlobalBinding string
 
 // isVideoFile checks if a file is a supported video format (case-insensitive)
 func isVideoFile(filePath string) bool {

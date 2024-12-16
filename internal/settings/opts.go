@@ -3,6 +3,7 @@ package settings
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	getopts "github.com/DavidGamba/go-getoptions"
@@ -25,11 +26,12 @@ var LogLevel *string  // LogLevel is the log level to use
 /**
  * CONVERSION OPTIONS
  **/
-var blockAuto chan bool     // blockAuto is a channel to block automatic conversion
-var MaxConcurrent *int      // max number of concurrent conversions
-var AutoConvert *bool       // true to automatically convert files in the watch directory
-var DeleteAfter *bool       // true to delete source files after conversion
-var OverwriteExisting *bool // true to overwrite already converted files
+var blockAuto chan bool      // blockAuto is a channel to block automatic conversion
+var MaxConcurrent *int       // max number of concurrent conversions
+var AutoConvert *bool        // true to automatically convert files in the watch directory
+var DeleteAfter *bool        // true to delete source files after conversion
+var OverwriteExisting *bool  // true to overwrite already converted files
+var PresetConfigPath *string // path to the preset configuration file
 
 /**
 *  FILE QUEUE OPTIONS
@@ -56,6 +58,14 @@ func init() {
 	AutoConvert = opts.Bool("auto-convert", true, opts.Description("Automatically convert files in the watch directory"), opts.Alias("a"))
 	DeleteAfter = opts.Bool("delete-after", false, opts.Description("Delete source files after conversion"), opts.Alias("d"))
 	OverwriteExisting = opts.Bool("overwrite-existing", false, opts.Description("Overwrite already converted files"), opts.Alias("O"))
+	PresetConfigPath = opts.String("preset-config", "./presets.json", opts.Description("Path to the preset configuration file"), opts.Alias("P"))
+	// evaluate full path for preset config
+	var fullpath, err = filepath.Abs(*PresetConfigPath)
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "Error evaluating full path for preset config: %v\n", err)
+	} else {
+		PresetConfigPath = &fullpath
+	}
 
 	LogLevel = opts.String("log-level", "info", opts.Description("Log level to use"), opts.Alias("L"))
 
